@@ -1,0 +1,33 @@
+{
+  "name": "chat-manager-denis",
+  "version": "0.1.0",
+  "description": "ChatManager",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start:dev": "nodemon src/index.ts",
+    "start": "pm2 dist/bot.js",
+    "stop": "pm2 stop bot"
+  },
+  "author": "https://vk.com/id171745503",
+  "license": "ISC",
+  "dependencies": {
+    "@types/mongoose": "^5.10.5",
+    "@vk-io/hear": "^1.1.0",
+    "@vk-io/scenes": "^1.1.0",
+    "@vk-io/session": "^2.1.0",
+    "moment": "^2.29.1",
+    "mongodb-client-encryption": "^1.2.4",
+    "mongoose": "^5.12.12",
+    "node-fetch": "^2.6.1",
+    "vk-io": "^4.3.0"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^2.14.0",
+    "terser-webpack-plugin": "^5.1.3",
+    "webpack": "^5.38.1",
+    "webpack-cli": "^4.7.2",
+    "webpack-node-externals": "^3.0.0",
+    "webpack-obfuscator": "^3.3.1"
+  }
+}

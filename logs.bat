@@ -1,0 +1,1 @@
+pm2 logs bot.e --lines 30 

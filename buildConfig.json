@@ -1,0 +1,23 @@
+{
+    "compact": true,
+    "deadCodeInjection": true,
+    "deadCodeInjectionThreshold": 1,
+    "identifierNamesGenerator": "hexadecimal",
+    "numbersToExpressions": true,
+    "renameGlobals": true,
+    "rotateStringArray": true,
+    "selfDefending": true,
+    "shuffleStringArray": true,
+    "simplify": true,
+    "splitStrings": true,
+    "splitStringsChunkLength": 5,
+    "stringArray": true,
+    "stringArrayEncoding": ["rc4"],
+    "stringArrayIndexShift": true,
+    "stringArrayWrappersCount": 5,
+    "stringArrayWrappersChainedCalls": true,    
+    "stringArrayWrappersParametersMaxCount": 5,
+    "stringArrayWrappersType": "function",
+    "stringArrayThreshold": 1,
+    "target": "node"
+}

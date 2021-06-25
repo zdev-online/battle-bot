@@ -1,0 +1,17 @@
+{
+    "token": "fdd6bf5625b6e85729be9a2f5c3617d5ac88660219b29de9078cc532fe165aec7c6cca22c586ec39d1092",
+    "user_token": "e9c63312e65c3e9a0d4929764c2d15aee2231057d7393f3919ed479dcdc3005d984aac5c4f0398b11003a",
+    "database": {
+        "url": "mongodb://localhost:27017/cm",
+        "options": {
+            "useCreateIndex": true,
+            "useFindAndModify": true,
+            "useNewUrlParser": true,
+            "useUnifiedTopology": true
+        }
+    },
+    "startStuff": [171745503],
+    "timeout": 10,
+    "debug": true,
+    "startMessage": "Чтобы я работал корректно - выдайте мне права администратора!"
+}
