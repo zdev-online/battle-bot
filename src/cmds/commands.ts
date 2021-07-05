@@ -1,5 +1,5 @@
 import { MessageContext, resolveResource, createCollectIterator, getRandomId, Keyboard } from 'vk-io';
-import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users } from '../database/models';
+import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers } from '../database/models';
 import { vk, hm, ss } from '../index';
 import sendError from '../utils/sendError';
 import moment from 'moment';
@@ -430,6 +430,31 @@ hm.hear(/\/nick/, async (ctx: MessageContext) => {
         return ctx.send(`Ник сменен на [id${ctx.senderId}|${new_nick}]!`);
     } catch(e){
         return sendError(ctx, '/nick', e);
+    }
+});
+
+hm.hear(/\/check/i, async (ctx: MessageContext) => {
+    try {
+        if(!ctx.text){ return; }
+
+        let checkIdSplited: string[] = ctx.text.split(' ');
+        if(!checkIdSplited[1]){ return ctx.send(`Укажите ID пользователя, которого нужно проверять!`); }
+
+        let res = await resolveResource({ api: vk.api, resource: checkIdSplited[1] });
+        if(res.type !== 'user'){ return ctx.send(`Следить можно только за пользователем!`); }
+
+        let check = await PoolUsers.findOne({ forId: ctx.senderId, checkId: res.id });
+
+        if(check){ return ctx.send(`Вы уже следите за этим пользователем`); }
+
+        await PoolUsers.create({ forId: ctx.senderId, checkId: res.id });
+
+        return ctx.send(`Я сообщу вам, как только пользователь попадет в бан!`);
+    } catch(e){
+        if(e.message == 'Resource not found'){
+            return ctx.send(`Пользователь с таким ID - не найден!`);
+        }
+        return sendError(ctx, '/check', e);
     }
 });
 
