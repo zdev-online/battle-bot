@@ -1,5 +1,5 @@
 import { MessageContext, VK } from "vk-io";
-import { Chats, Members, Whitelist } from "../database/models";
+import { Chats, Members, Settings, Whitelist } from "../database/models";
 import sendError from "../utils/sendError";
 import fs from 'fs';
 import path from 'path';
@@ -23,6 +23,11 @@ export default (vk: VK, ss: Array<Number>) => async (ctx: MessageContext, next: 
 
         // Smile filter
         let smiles = String(ctx.text).match(/[^\w\s,]/gim);
+        let settings = await Settings.findOne({ key: 'settings-key' });
+        if(!settings){ return; }
+        if(smiles && smiles.length >= settings.maxSmiles){
+            await ctx.deleteMessage({ peer_id: ctx.peerId, conversation_message_ids: ctx.conversationMessageId });
+        }
 
         let wl = await Whitelist.findOne({ vkId: ctx.senderId });
         if(wl){ debug && console.log(`Message-User-In-WL`); return; }

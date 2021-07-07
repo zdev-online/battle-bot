@@ -7,5 +7,6 @@ import Whitelist from './models/WhiteList';
 import Battles from './models/Battles';
 import Users from './models/Users';
 import PoolUsers from "./models/PoolUsers";
+import Settings from "./models/Settings";
 
-export { Chats, Fall, Members, Stuff, Admins, Whitelist, Battles, Users, PoolUsers }
+export { Chats, Fall, Members, Stuff, Admins, Whitelist, Battles, Users, PoolUsers, Settings }

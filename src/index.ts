@@ -1,6 +1,6 @@
 import { getRandomId, MessageContext, VK } from 'vk-io';
 import moment from 'moment';
-import { Stuff, Chats, Admins, Fall, Members, Whitelist, Battles, Users } from './database/models';
+import { Stuff, Chats, Admins, Fall, Members, Whitelist, Battles, Users, Settings } from './database/models';
 import { HearManager } from '@vk-io/hear';
 import Payload from './middlewares/Payload';
 import Message from './middlewares/Message';
@@ -63,6 +63,12 @@ vk.updates.on('chat_invite_user', GroupKick(vk, ss));
         config.debug && await Battles.deleteMany();
         config.debug && await Users.deleteMany();
         console.log(`База данных очищена!`);
+
+        let settings = await Settings.findOne({ key: 'settings-key' });
+
+        if(!settings){
+            await Settings.create({});
+        }
 
         config.debug && console.log(JSON.stringify(config))
 

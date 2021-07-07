@@ -1,5 +1,5 @@
 import { MessageContext, resolveResource, createCollectIterator, getRandomId, Keyboard } from 'vk-io';
-import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers } from '../database/models';
+import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers, Settings } from '../database/models';
 import { vk, hm, ss } from '../index';
 import sendError from '../utils/sendError';
 import moment from 'moment';
@@ -492,6 +492,28 @@ hm.hear(/\/online/i, async (ctx) => {
         return ctx.send(message);
     } catch(e){
         return sendError(ctx, '/online', e);
+    }
+});
+
+hm.hear(/\/smiles/i, async (ctx) => {
+    try {
+        if(!ctx.text){return;}
+        if(!hasRole(ctx, 'stuff')){ return ctx.send(`Недостаточно прав!`); }
+
+        let splitted = ctx.text.split(' ')[1];
+        let smileLength = parseInt(splitted);
+
+        if(Number.isNaN(smileLength)){
+            return ctx.send(`Укажите целое число!`);
+        }
+
+        let settings = await Settings.findOne({ key: 'settings-key' });
+        if(!settings){ return; }
+        settings.maxSmiles = smileLength;
+        await settings.save();
+        return ctx.send(`Лимит смайликов в сообщении: ${smileLength}`);
+    } catch(e){
+        return sendError(ctx, '/smiles', e);
     }
 });
 
