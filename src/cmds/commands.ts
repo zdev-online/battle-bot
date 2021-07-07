@@ -458,6 +458,43 @@ hm.hear(/\/check/i, async (ctx: MessageContext) => {
     }
 });
 
+hm.hear(/\/online/i, async (ctx) => {
+    try {
+        let { profiles } = await vk.api.messages.getConversationMembers({ 
+            peer_id: ctx.peerId, 
+            fields: ['online', 'last_seen']
+        });
+        let message: string = `Активные пользователи:\n`;
+        if(!profiles){ return ctx.send(`Пользователей - нет!`); }
+        for(let i = 0; i < profiles.length; i++){
+            let { first_name, last_name, last_seen, online } = profiles[i];
+            message += `> ${first_name} ${last_name} - `;
+            if(!last_seen || !last_seen.time){
+                message += `Не онлайн (Нет данных)\n`;
+                continue;
+            }
+            if(online){
+                message += `Онлайн (`;
+            } else {
+                message += `${moment(last_seen.time * 1000).format('HH:mm:ss, DD.MM.YY')} (`;
+            }
+            switch(last_seen.platform){
+                case 1: { message += `Моб.версия сайта)`; break; }
+                case 2: { message += `IPhone)`; break; }
+                case 3: { message += `IPad)`; break; }
+                case 4: { message += `Android)`; break; }
+                case 5: { message += `Windows Phone)`; break; }
+                case 6: { message += `Windows 10)`; break; }
+                case 7: { message += `Компьютер)`; break; }
+            }
+            message += `\n`;
+        }
+        return ctx.send(message);
+    } catch(e){
+        return sendError(ctx, '/online', e);
+    }
+});
+
 hm.onFallback((ctx: MessageContext, next: Function) => {
     if(ctx.isChat){ config.debug && console.log('CMDS-Fallback-Chat | CMDS-Go-Next'); return next(); }
     return;

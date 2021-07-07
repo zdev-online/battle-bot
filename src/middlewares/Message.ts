@@ -20,6 +20,10 @@ export default (vk: VK, ss: Array<Number>) => async (ctx: MessageContext, next: 
         }
         
         if(!chat.active){ debug && console.log(`Message-Chat-No-Active`); return; }
+
+        // Smile filter
+        let smiles = String(ctx.text).match(/[^\w\s,]/gim);
+
         let wl = await Whitelist.findOne({ vkId: ctx.senderId });
         if(wl){ debug && console.log(`Message-User-In-WL`); return; }
         if(!ctx.stuffIds.includes(ctx.senderId) && !ss.includes(ctx.senderId) && ctx.senderId > 0){
