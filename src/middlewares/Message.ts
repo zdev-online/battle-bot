@@ -25,8 +25,18 @@ export default (vk: VK, ss: Array<Number>) => async (ctx: MessageContext, next: 
         let smiles = String(ctx.text).match(/[^\w\s,]/gim);
         let settings = await Settings.findOne({ key: 'settings-key' });
         if(!settings){ return; }
-        if(smiles && smiles.length >= settings.maxSmiles){
-            await ctx.deleteMessage({ peer_id: ctx.peerId, conversation_message_ids: ctx.conversationMessageId });
+        if(smiles && settings.maxSmiles && smiles.length >= settings.maxSmiles){
+            ctx.deleteMessage({ 
+                peer_id: ctx.peerId, 
+                conversation_message_ids: ctx.conversationMessageId,
+                delete_for_all: true
+            }).catch(e => {
+                console.error(`Ошибка удаления сообщения: ${e.message}`);
+                console.log(`Max: ${settings ? settings.maxSmiles : 0} <= Smiles: ${smiles ? smiles.length : 0}`)
+            }).then(() => {
+                console.log(`Max: ${settings ? settings.maxSmiles : 0} <= Smiles: ${smiles ? smiles.length : 0}`)
+                console.log(`Сообщение - удалено [${ctx.senderId} - ${ctx.conversationMessageId}]!`);
+            });
         }
 
         let wl = await Whitelist.findOne({ vkId: ctx.senderId });

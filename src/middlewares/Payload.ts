@@ -78,6 +78,7 @@ export default (vk: VK, ss: Array<Number>) => {
                             debug && console.log(`Payload-Is-Stuff`);
                             let { vkId, chatId } = ctx.messagePayload;
                             await vk.api.messages.removeChatUser({ member_id: vkId, chat_id: chatId });
+                            await ctx.send(`Пользователь исключен из беседы!`);
                             debug && console.log(`[Payload]: https://vk.com${ctx.senderId < 0 ? `club${ctx.senderId}` : `id${ctx.senderId}`} кикнул https://vk.com${vkId < 0 ? `club${vkId}` : `id${vkId}`}`);
                         }
                         return;
