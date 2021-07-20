@@ -8,10 +8,11 @@ import config from '../config/config';
 
 moment.locale('ru');
 
+function pad(s: number) {
+    return (s < 10 ? '0' : '') + s;
+}
+
 const formatUptime = function (time: number): string {
-    function pad(s: number) {
-        return (s < 10 ? '0' : '') + s;
-    }
     let hours = Math.floor(time / (60 * 60));
     let minutes = Math.floor(time % (60 * 60) / 60);
     let seconds = Math.floor(time % 60);
@@ -450,9 +451,9 @@ hm.hear(/^\/check/i, async (ctx: MessageContext) => {
 
         let check = await PoolUsers.findOne({ forId: ctx.senderId, checkId: res.id });
 
-        if (check) { 
+        if (check) {
             check.delete();
-            return ctx.send(`Слежка за [id${check.checkId}|пользователем] - остановлена!`); 
+            return ctx.send(`Слежка за [id${check.checkId}|пользователем] - остановлена!`);
         }
 
         await PoolUsers.create({ forId: ctx.senderId, checkId: res.id });
@@ -475,24 +476,25 @@ hm.hear(/^\/online/i, async (ctx) => {
         let message: string = `Активные пользователи:\n`;
         if (!profiles) { return ctx.send(`Пользователей - нет!`); }
         for (let i = 0; i < profiles.length; i++) {
-            let { first_name, last_name, last_seen, online } = profiles[i];
-            message += `> ${first_name} ${last_name} - `;
+            let { id, first_name, last_name, last_seen, online } = profiles[i];
+            message += `> [id${id}|${last_name}] - `;
             if (!last_seen || !last_seen.time) {
                 message += `Не онлайн (Нет данных)\n`;
                 continue;
             }
+            let date = moment().diff(moment(last_seen.time * 1000), 'milliseconds');
             if (online) {
                 message += `Онлайн (`;
             } else {
-                message += `${moment(last_seen.time * 1000).format('HH:mm:ss, DD.MM.YY')} (`;
+                message += `${formatUptime(date)} назад. (`;
             }
             switch (last_seen.platform) {
-                case 1: { message += `Моб.версия сайта)`; break; }
+                case 1: { message += `Моб.версия)`; break; }
                 case 2: { message += `IPhone)`; break; }
                 case 3: { message += `IPad)`; break; }
                 case 4: { message += `Android)`; break; }
-                case 5: { message += `Windows Phone)`; break; }
-                case 6: { message += `Windows 10)`; break; }
+                case 5: { message += `Телефон)`; break; }
+                case 6: { message += `Компьютер)`; break; }
                 case 7: { message += `Компьютер)`; break; }
             }
             message += `\n`;
@@ -530,7 +532,7 @@ hm.hear(/^\/filter/i, async (ctx) => {
         if (!ctx.text) { return; }
 
         let chat = await Chats.findOne({ chatId: ctx.chatId });
-        if(!chat){ return; }
+        if (!chat) { return; }
 
         chat.smileFilter = !chat.smileFilter;
 
@@ -545,15 +547,16 @@ hm.hear(/^\/filter/i, async (ctx) => {
 hm.hear(/^\/cc/i, async (ctx) => {
     try {
         let users = await PoolUsers.find({ forId: ctx.senderId });
-        if(!users.length){ return ctx.send(`Вы не за кем не следите!`);}
-        let message: string = ``;
-        let users_info = await vk.api.users.get({ user_ids: users.map(x => x.checkId.toString() )});
-        for(let i = 0; i < users.length; i++){
+        if (!users.length) { return ctx.send(`Вы не за кем не следите!`); }
+        let message: string = `Пользователи за которыми вы следите:\n`;
+        let users_info = await vk.api.users.get({ user_ids: users.map(x => x.checkId.toString()) });
+        for (let i = 0; i < users.length; i++) {
             let { id, first_name, last_name } = users_info[i];
             message += `> [id${id}|${first_name} ${last_name}]\n`;
         }
+        message += `Чтобы прекратить слежку: /check VKID / Ссылка`;
         return ctx.send(message);
-    } catch(e){
+    } catch (e) {
         return sendError(ctx, '/cc', e);
     }
 });
