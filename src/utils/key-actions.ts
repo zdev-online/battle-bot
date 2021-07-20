@@ -20,3 +20,4 @@ export const ADMIN_CANCEL_BATTLE    = "ADMIN_CANCEL_BATTLE";
 export const ADMIN_CALL             = "ADMIN_CALL";
 export const NEXT_BATTLE_PAGE       = "NEXT_BATTLE_PAGE";
 export const PREV_BATTLE_PAGE       = "PREV_BATTLE_PAGE";
+export const DEL_DELETED            = "DEL_DELETED";

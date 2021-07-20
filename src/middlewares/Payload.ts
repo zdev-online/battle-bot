@@ -1,13 +1,13 @@
 import { Keyboard, MessageContext, VK } from "vk-io";
 import config from "../config/config";
-import { Battles, Chats, Users } from "../database/models";
+import { Battles, Chats, PoolUsers, Users } from "../database/models";
 import createBattlePost from "../utils/createBattlePost";
 import {
     ABOUT_BATTLE,
     ADMIN_ACCEPT_BATTLE,
     ADMIN_CALL,
     ADMIN_CANCEL_BATTLE,
-    CREATE_BATTLE, GET_BATTLES, KICK, PROFILE
+    CREATE_BATTLE, DEL_DELETED, GET_BATTLES, KICK, PROFILE
 } from "../utils/key-actions";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD } from "../utils/utils";
@@ -94,6 +94,12 @@ export default (vk: VK, ss: Array<Number>) => {
                         });
                         await ctx.send(`Администраторы получили уведомление!`);
                         return;
+                    }
+                    case DEL_DELETED: {
+                        let user = await PoolUsers.findById(ctx.messagePayload.id);
+                        if(!user){ return ctx.send(`Пользователь не найден!`); }
+                        await ctx.send(`[id${user.checkId}|Пользователь] теперь не отслеживается!`);
+                        return user.delete();
                     }
                 }
             }

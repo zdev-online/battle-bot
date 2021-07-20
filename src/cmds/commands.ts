@@ -33,6 +33,10 @@ hm.hear(/^\/help/i, (ctx: MessageContext) => {
     message += `> /info - Данные пользователя\n`;
     message += `> /admins - Управляющие\n`;
     message += `> /groups - Вкл\\выкл кик групп\n`;
+    message += `> /check - Вкл\\выкл слежки за пользователем\n`;
+    message += `> /filter - Вкл\\выкл фильтр смайликов\n`;
+    message += `> /clear - Кикнуть забаненных\n`;
+    message += `> /online - Онлайн пользователей\n`;
     return ctx.send(message);
 });
 
@@ -140,13 +144,14 @@ hm.hear(/^\/kill/i, async (ctx: MessageContext) => {
 hm.hear(/^\/clear/i, async (ctx: MessageContext) => {
     try {
         if (!ctx.chat) { return; }
-        if (!hasRole(ctx, 'stuff')) { return; }
         let { profiles } = await vk.api.messages.getConversationMembers({ peer_id: ctx.peerId });
         let count = 0;
         if (!profiles) { return ctx.send('Забанненых пользователей - нет!') }
         for (let i of profiles) {
             if (i.deactivated) {
-                await vk.api.messages.removeChatUser({ chat_id: Number(ctx.chatId), member_id: i.id });
+                await vk.api.messages.removeChatUser({ chat_id: Number(ctx.chatId), member_id: i.id }).catch(e => {
+                    console.error(`Ошибка удаления забаненного пользователя! ${e.message}`);
+                });
                 count++;
             }
         }
@@ -374,7 +379,7 @@ hm.hear(/^\/wlist/i, async (ctx: MessageContext) => {
     }
 });
 
-hm.hear(/\/white/i, async (ctx: MessageContext) => {
+hm.hear(/^\/white/i, async (ctx: MessageContext) => {
     try {
         if (!ctx.chat) { return; }
         if (!hasRole(ctx, 'stuff')) { return ctx.send(`Недостаточно прав!`); }
@@ -390,7 +395,7 @@ hm.hear(/\/white/i, async (ctx: MessageContext) => {
     }
 });
 
-hm.hear(/\/groups/i, async (ctx: MessageContext) => {
+hm.hear(/^\/groups/i, async (ctx: MessageContext) => {
     try {
         if (!hasRole(ctx, 'admin')) { return; }
         if (ctx.chat.kickGroups) {
@@ -405,7 +410,7 @@ hm.hear(/\/groups/i, async (ctx: MessageContext) => {
     }
 });
 
-hm.hear(/\/battle/i, async (ctx: MessageContext) => {
+hm.hear(/^\/battle/i, async (ctx: MessageContext) => {
     try {
         if (ctx.isChat) { return ctx.send(`Создать\\Принять заявку на баттл можно только в ЛС боту!`); }
         return ctx.scene.enter('battle-pages');
@@ -414,7 +419,7 @@ hm.hear(/\/battle/i, async (ctx: MessageContext) => {
     }
 });
 
-hm.hear(/\/nick/, async (ctx: MessageContext) => {
+hm.hear(/^\/nick/, async (ctx: MessageContext) => {
     try {
         if (!ctx.text) { return; }
         let new_nick = ctx.text.split(' ')[1];
@@ -433,7 +438,7 @@ hm.hear(/\/nick/, async (ctx: MessageContext) => {
     }
 });
 
-hm.hear(/\/check/i, async (ctx: MessageContext) => {
+hm.hear(/^\/check/i, async (ctx: MessageContext) => {
     try {
         if (!ctx.text) { return; }
 
@@ -445,7 +450,10 @@ hm.hear(/\/check/i, async (ctx: MessageContext) => {
 
         let check = await PoolUsers.findOne({ forId: ctx.senderId, checkId: res.id });
 
-        if (check) { return ctx.send(`Вы уже следите за этим пользователем`); }
+        if (check) { 
+            check.delete();
+            return ctx.send(`Слежка за [id${check.checkId}|пользователем] - остановлена!`); 
+        }
 
         await PoolUsers.create({ forId: ctx.senderId, checkId: res.id });
 
@@ -458,7 +466,7 @@ hm.hear(/\/check/i, async (ctx: MessageContext) => {
     }
 });
 
-hm.hear(/\/online/i, async (ctx) => {
+hm.hear(/^\/online/i, async (ctx) => {
     try {
         let { profiles } = await vk.api.messages.getConversationMembers({
             peer_id: ctx.peerId,
@@ -495,7 +503,7 @@ hm.hear(/\/online/i, async (ctx) => {
     }
 });
 
-hm.hear(/\/smiles/i, async (ctx) => {
+hm.hear(/^\/smiles/i, async (ctx) => {
     try {
         if (!ctx.text) { return; }
         if (!hasRole(ctx, 'stuff')) { return ctx.send(`Недостаточно прав!`); }
@@ -517,7 +525,7 @@ hm.hear(/\/smiles/i, async (ctx) => {
     }
 });
 
-hm.hear(/\/filter/i, async (ctx) => {
+hm.hear(/^\/filter/i, async (ctx) => {
     try {
         if (!ctx.text) { return; }
 
@@ -531,6 +539,22 @@ hm.hear(/\/filter/i, async (ctx) => {
         return chat.smileFilter ? ctx.send(`Фильтр смайликов - включен!`) : ctx.send(`Фильтр смайликов - отключен!`);
     } catch (e) {
         return sendError(ctx, '/filter', e);
+    }
+});
+
+hm.hear(/^\/cc/i, async (ctx) => {
+    try {
+        let users = await PoolUsers.find({ forId: ctx.senderId });
+        if(!users.length){ return ctx.send(`Вы не за кем не следите!`);}
+        let message: string = ``;
+        let users_info = await vk.api.users.get({ user_ids: users.map(x => x.checkId.toString() )});
+        for(let i = 0; i < users.length; i++){
+            let { id, first_name, last_name } = users_info[i];
+            message += `> [id${id}|${first_name} ${last_name}]\n`;
+        }
+        return ctx.send(message);
+    } catch(e){
+        return sendError(ctx, '/cc', e);
     }
 });
 

@@ -4,7 +4,7 @@ import Notify from "./notify";
 import fs from 'fs';
 import path from 'path';
 import Config from '../config/config';
-import { ADMIN_CALL } from "./key-actions";
+import { ADMIN_CALL, DEL_DELETED } from "./key-actions";
 
 const config = Config;
 const { debug, timeout } = config;
@@ -79,7 +79,17 @@ export default (vk: VK) => {
                     deactivated && vk.api.messages.send({
                         user_id: users[i].forId,
                         message: `[id${sid}|${first_name} ${last_name}] был забанен, вы устанавливали за ним слежку.`,
-                        random_id: Math.floor(Math.random() * new Date().getTime() + 1)
+                        random_id: Math.floor(Math.random() * new Date().getTime() + 1),
+                        keyboard: Keyboard.keyboard([
+                            Keyboard.textButton({
+                                label: "Остановить слежку",
+                                color: 'secondary',
+                                payload: {
+                                    action: DEL_DELETED,
+                                    id: users[i].id
+                                }
+                            })
+                        ]).inline(true)
                     }).catch(e => {
                         console.error(`Ошибка уведомления о забаненном пользователе: ${e.message}`);
                     });
