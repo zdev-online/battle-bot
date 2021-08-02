@@ -1,10 +1,11 @@
 import { MessageContext, resolveResource, createCollectIterator, getRandomId, Keyboard } from 'vk-io';
-import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers, Settings } from '../database/models';
+import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers, Settings, Reports } from '../database/models';
 import { vk, hm, ss } from '../index';
 import sendError from '../utils/sendError';
 import moment from 'moment';
 import os from 'os';
 import config from '../config/config';
+import { REPORT_ANSWER } from '../utils/key-actions';
 
 moment.locale('ru');
 
@@ -38,6 +39,8 @@ hm.hear(/^\/help/i, (ctx: MessageContext) => {
     message += `> /filter - Вкл\\выкл фильтр смайликов\n`;
     message += `> /clear - Кикнуть забаненных\n`;
     message += `> /online - Онлайн пользователей\n`;
+    message += `> /cc - пользователи за которыми вы следите\n`;
+    message += `> /report - сообщить о баге\\ошибке\\недоработке\n`;
     return ctx.send(message);
 });
 
@@ -178,6 +181,7 @@ hm.hear(/^\/update/i, async (ctx: MessageContext) => {
         if (ctx.attachments.length) {
             attachments = ctx.attachments.map(x => x.toString());
         }
+        await ctx.send(`Рассылка началась!`);
         for (let i = 0; i < length; i++) {
             vk.api.messages.send({
                 chat_id: data[i].chatId,
@@ -188,7 +192,7 @@ hm.hear(/^\/update/i, async (ctx: MessageContext) => {
                 console.error(`Ошибка рассылки [ChatID: ${data[i].chatId}]: ${e.message}`);
             }).then(() => { config.debug && console.log(`Сообщение рассылки - отправлено: ${i + 1}/${length}`); });
         }
-        return ctx.send(`Рассылка началась!`);
+        return await ctx.send(`Рассылка окончена!`);
     } catch (e) {
         return sendError(ctx, '/update', e);
     }
@@ -467,7 +471,7 @@ hm.hear(/^\/check/i, async (ctx: MessageContext) => {
     }
 });
 
-hm.hear(/^\/online/i, async (ctx) => {
+hm.hear(/^\/online/i, async (ctx: MessageContext) => {
     try {
         let { profiles } = await vk.api.messages.getConversationMembers({
             peer_id: ctx.peerId,
@@ -476,17 +480,17 @@ hm.hear(/^\/online/i, async (ctx) => {
         let message: string = `Активные пользователи:\n`;
         if (!profiles) { return ctx.send(`Пользователей - нет!`); }
         for (let i = 0; i < profiles.length; i++) {
-            let { id, first_name, last_name, last_seen, online } = profiles[i];
+            let { id, last_name, last_seen, online } = profiles[i];
             message += `> [id${id}|${last_name}] - `;
             if (!last_seen || !last_seen.time) {
                 message += `Не онлайн (Нет данных)\n`;
                 continue;
             }
-            let date = moment().diff(moment(last_seen.time * 1000), 'milliseconds');
             if (online) {
                 message += `Онлайн (`;
             } else {
-                message += `${formatUptime(date)} назад. (`;
+                moment.locale('ru');
+                message += `${moment(moment(last_seen.time * 1000)).fromNow()}. (`;
             }
             switch (last_seen.platform) {
                 case 1: { message += `Моб.версия)`; break; }
@@ -505,7 +509,7 @@ hm.hear(/^\/online/i, async (ctx) => {
     }
 });
 
-hm.hear(/^\/smiles/i, async (ctx) => {
+hm.hear(/^\/smiles/i, async (ctx: MessageContext) => {
     try {
         if (!ctx.text) { return; }
         if (!hasRole(ctx, 'stuff')) { return ctx.send(`Недостаточно прав!`); }
@@ -527,7 +531,7 @@ hm.hear(/^\/smiles/i, async (ctx) => {
     }
 });
 
-hm.hear(/^\/filter/i, async (ctx) => {
+hm.hear(/^\/filter/i, async (ctx: MessageContext) => {
     try {
         if (!ctx.text) { return; }
 
@@ -544,7 +548,7 @@ hm.hear(/^\/filter/i, async (ctx) => {
     }
 });
 
-hm.hear(/^\/cc/i, async (ctx) => {
+hm.hear(/^\/cc/i, async (ctx: MessageContext) => {
     try {
         let users = await PoolUsers.find({ forId: ctx.senderId });
         if (!users.length) { return ctx.send(`Вы не за кем не следите!`); }
@@ -558,6 +562,33 @@ hm.hear(/^\/cc/i, async (ctx) => {
         return ctx.send(message);
     } catch (e) {
         return sendError(ctx, '/cc', e);
+    }
+});
+
+hm.hear(/^\/report/i, async (ctx: MessageContext) => {
+    try {
+        if(!ctx.text){ return; }
+        let text = ctx.text.replace('/report ', '');
+        if(!text.length){ return ctx.send(`Текст обращения отсутствует!\nПример: /report Какой-то текст`); }
+        let report = await Reports.create({ reportId: ctx.senderId, state: 'open' });
+        let ids = [...ctx.stuffIds, ...ss];
+        let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
+        await ctx.send(`Репорт от пользователя [id${ctx.senderId}|${first_name} ${last_name}]!\nЕго текст: ${text}`, { 
+            peer_ids: ids,
+            keyboard: Keyboard.keyboard([
+                Keyboard.textButton({ 
+                    label: 'Ответить', 
+                    color: 'positive', 
+                    payload: {
+                        action: REPORT_ANSWER,
+                        id: report.id
+                    }
+                })
+            ]).inline(true)
+        });
+        return await ctx.send(`Репорт - отправлен администрации!`);
+    } catch (e) {
+
     }
 });
 

@@ -11,6 +11,7 @@ const { debug, timeout } = config;
 
 export default (vk: VK) => {
     const notify = Notify(vk);
+
     setInterval(async () => {
         try {
             // debug && console.clear();
@@ -26,6 +27,7 @@ export default (vk: VK) => {
             // debug && console.time('time-contoller-loop-start');
             for(let i = 0; i < data.length; i++){
                 let { vkId, chat, lastMessage } = data[i];
+                if(!chat.active){ continue; }
                 let greatThen = Number(((now - (lastMessage - timeout * 1000)) / 1000).toFixed(0));
                 // debug && console.log(`[timeContoller]: Не писал(а) более G: ${greatThen}|T: ${timeout}: https://vk.com/${vkId > 0 ? `id${vkId}` : `club${+vkId}`}`)
                 notify.stuff(stuff, vkId, greatThen, chat.chatId, lastMessage, now).catch(e => {}).then(() => {
@@ -46,7 +48,7 @@ export default (vk: VK) => {
                 if(chat.isBattle){
                     vk.api.messages.send({
                         chat_id: chat.chatId,
-                        message: 'Вызвать администратора для регистрации окончания баттла?',
+                        message: '@all Вызвать администратора для регистрации окончания баттла?',
                         keyboard: Keyboard.keyboard([
                             Keyboard.textButton({
                                 label: "Вызвать администратора!",

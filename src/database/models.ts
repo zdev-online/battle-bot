@@ -8,5 +8,6 @@ import Battles from './models/Battles';
 import Users from './models/Users';
 import PoolUsers from "./models/PoolUsers";
 import Settings from "./models/Settings";
+import Reports from './models/Reports';
 
-export { Chats, Fall, Members, Stuff, Admins, Whitelist, Battles, Users, PoolUsers, Settings }
+export { Chats, Fall, Members, Stuff, Admins, Whitelist, Battles, Users, PoolUsers, Settings, Reports }

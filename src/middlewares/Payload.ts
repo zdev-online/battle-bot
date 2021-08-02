@@ -1,13 +1,13 @@
 import { Keyboard, MessageContext, VK } from "vk-io";
 import config from "../config/config";
-import { Battles, Chats, PoolUsers, Users } from "../database/models";
+import { Battles, Chats, PoolUsers, Reports, Users } from "../database/models";
 import createBattlePost from "../utils/createBattlePost";
 import {
     ABOUT_BATTLE,
     ADMIN_ACCEPT_BATTLE,
     ADMIN_CALL,
     ADMIN_CANCEL_BATTLE,
-    CREATE_BATTLE, DEL_DELETED, GET_BATTLES, KICK, PROFILE
+    CREATE_BATTLE, DEL_DELETED, GET_BATTLES, KICK, PROFILE, REPORT_ANSWER
 } from "../utils/key-actions";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD } from "../utils/utils";
@@ -30,6 +30,7 @@ export default (vk: VK, ss: Array<Number>) => {
         try {
             if (!ctx.hasMessagePayload) { debug && console.log(`Payload-Go-Next`); return next(); }
             if (ctx.messagePayload.action && !ctx.isChat) {
+                debug && console.log(ctx.messagePayload);
                 switch (ctx.messagePayload.action) {
                     case CREATE_BATTLE: { return ctx.scene.enter('create-battle'); }
                     case GET_BATTLES: { return ctx.scene.enter('battle-list'); }
@@ -87,7 +88,7 @@ export default (vk: VK, ss: Array<Number>) => {
                         let link = await vk.api.messages.getInviteLink({ peer_id: ctx.peerId });
                         let message = `В баттл-беседе вызвают администратора!\nСсылка: ${link.link}`;
                         await ctx.send(message, { 
-                            user_ids: ctx.stuffIds,
+                            user_ids: [...ctx.stuffIds, ...ss],
                             keyboard: Keyboard.keyboard([
                                 Keyboard.urlButton({ label: 'Зайти в беседу', url: String(link.link) })
                             ]).inline(true)
@@ -100,6 +101,13 @@ export default (vk: VK, ss: Array<Number>) => {
                         if(!user){ return ctx.send(`Пользователь не найден!`); }
                         await ctx.send(`[id${user.checkId}|Пользователь] теперь не отслеживается!`);
                         return user.delete();
+                    }
+                    case REPORT_ANSWER: {
+                        return ctx.scene.enter('report-answer', {
+                            state: {
+                                id: ctx.messagePayload.id
+                            }
+                        });
                     }
                 }
             }

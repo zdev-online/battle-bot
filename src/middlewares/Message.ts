@@ -46,20 +46,26 @@ export default (vk: VK, ss: Array<Number>) => async (ctx: MessageContext, next: 
         if (wl) { debug && console.log(`Message-User-In-WL`); return; }
         if (!ctx.stuffIds.includes(ctx.senderId) && !ss.includes(ctx.senderId) && ctx.senderId > 0) {
             let member = await Members.findOne({ vkId: ctx.senderId, chat: chat.id });
+            let lastMessage = ctx.createdAt * 1000 + timeout * 1000; 
             if (!member) {
                 debug && console.log(`Message-No-Member`);
-                member = await Members.create({
+                await Members.create({
                     vkId: ctx.senderId,
                     chat: chat.id,
-                    lastMessage: new Date().getTime() + timeout * 1000
+                    lastMessage
                 });
+                debug && console.log(`\
+                MSG: [https://vk.com/${ctx.senderId > 0 ? `id${ctx.senderId}` : `club${+ctx.senderId}`}]: LM: ${lastMessage}, Now: ${new Date().getTime()}
+                TIME: ${new Date().toLocaleString()}
+                `);
+            } else {
+                member.lastMessage = lastMessage;
+                await member.save();
+                debug && console.log(`\
+                MSG: [https://vk.com/${ctx.senderId > 0 ? `id${ctx.senderId}` : `club${+ctx.senderId}`}]: LM: ${lastMessage}, Now: ${new Date().getTime()}
+                TIME: ${new Date().toLocaleString()}
+                `);
             }
-            member.lastMessage = new Date().getTime() + timeout * 1000;
-            await member.save();
-            debug && console.log(`\
-            MSG: [https://vk.com/${ctx.senderId > 0 ? `id${ctx.senderId}` : `club${+ctx.senderId}`}]: LM: ${member.lastMessage}, Now: ${new Date().getTime()}
-            TIME: ${new Date().toLocaleString()}
-            `);
         }
         debug && console.log(`Message-Go-Next`);
         return next();
