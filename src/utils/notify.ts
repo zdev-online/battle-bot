@@ -41,7 +41,7 @@ function getKeyboard(chatId: number | undefined, vkId: number){
     ]).inline(true);
 }
 
-export default (vk: VK) => ({
+export default (vk: VK, ss: number[]) => ({
     chat: async (chatId: number | undefined, userId: number, greatThen: number) => {
         try {
             let name: string = '';
@@ -116,7 +116,7 @@ export default (vk: VK) => ({
             message += `\nСтавка: ${battle.bet}\n`;
             message += `Тип: ${['На ДД', 'От рук'][battle.type]}`;
             return vk.api.messages.send({
-                user_ids: [...stuff, ...admins],
+                user_ids: [...stuff, ...admins, ...ss],
                 message,
                 random_id: new Date().getTime() * 1000 * Math.random(),
                 keyboard: Keyboard.keyboard([

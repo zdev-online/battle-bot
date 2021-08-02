@@ -7,7 +7,7 @@ import {
     ADMIN_ACCEPT_BATTLE,
     ADMIN_CALL,
     ADMIN_CANCEL_BATTLE,
-    CREATE_BATTLE, DEL_DELETED, GET_BATTLES, KICK, PROFILE, REPORT_ANSWER
+    CREATE_BATTLE, DEL_DELETED, END_BATTLE, GET_BATTLES, KICK, PROFILE, REPORT_ANSWER
 } from "../utils/key-actions";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD } from "../utils/utils";
@@ -30,7 +30,7 @@ export default (vk: VK, ss: Array<Number>) => {
         try {
             if (!ctx.hasMessagePayload) { debug && console.log(`Payload-Go-Next`); return next(); }
             if (ctx.messagePayload.action && !ctx.isChat) {
-                debug && console.log(ctx.messagePayload);
+                debug && console.log(`Payload: payload -> ${JSON.stringify(ctx.messagePayload)}`);
                 switch (ctx.messagePayload.action) {
                     case CREATE_BATTLE: { return ctx.scene.enter('create-battle'); }
                     case GET_BATTLES: { return ctx.scene.enter('battle-list'); }
@@ -108,6 +108,9 @@ export default (vk: VK, ss: Array<Number>) => {
                                 id: ctx.messagePayload.id
                             }
                         });
+                    }
+                    case END_BATTLE: {
+                        return ctx.scene.enter('end-battle');
                     }
                 }
             }

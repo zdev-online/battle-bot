@@ -22,3 +22,6 @@ export const NEXT_BATTLE_PAGE       = "NEXT_BATTLE_PAGE";
 export const PREV_BATTLE_PAGE       = "PREV_BATTLE_PAGE";
 export const DEL_DELETED            = "DEL_DELETED";
 export const REPORT_ANSWER          = "REPORT_ANSWER";
+export const END_BATTLE             = "END_BATTLE";
+export const END_BATTLE_ACCEPT      = "END_BATTLE_ACCEPT";
+export const END_BATTLE_CANCEL      = "END_BATTLE_CANCEL";

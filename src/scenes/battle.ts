@@ -1,13 +1,13 @@
 import { StepScene } from "@vk-io/scenes";
 import { resolveResource, VK, Keyboard } from "vk-io";
 import { Battles } from "../database/models";
-import { ABOUT_BATTLE, ACCEPT, ACCEPT_BATTLE, CANCEL, CANCEL_BATTLE, ENEMY, FRIEND, INVALID, NEXT_BATTLE_PAGE, PREV_BATTLE_PAGE, SELECT_BATTLE_TYPE, SINGLE_BATTLE } from "../utils/key-actions";
+import { ABOUT_BATTLE, ACCEPT, ACCEPT_BATTLE, CANCEL, CANCEL_BATTLE, END_BATTLE_ACCEPT, END_BATTLE_CANCEL, ENEMY, FRIEND, INVALID, NEXT_BATTLE_PAGE, PREV_BATTLE_PAGE, SELECT_BATTLE_TYPE, SINGLE_BATTLE } from "../utils/key-actions";
 import Notify from "../utils/notify";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD, paginateBattles } from "../utils/utils";
 
-export default (vk: VK) => {
-    const notify = Notify(vk);
+export default (vk: VK, ss: number[]) => {
+    const notify = Notify(vk, ss);
     return [
         // Создание баттла
         new StepScene('create-battle', [
@@ -638,6 +638,88 @@ export default (vk: VK) => {
                     return sendError(ctx, 'battle-list', e);
                 }
             }
+        ]),
+        // Заявка на завершение баттла
+        new StepScene('end-battle', [
+            async ctx => {
+                try {
+                    if(ctx.scene.step.firstTime || !ctx.text){
+                        ctx.scene.state.photos = [];
+                        ctx.scene.state.id = '';
+                        return ctx.send(`Пришли мне ID баттла и 3 скриншота (2 скрина - слёт противника, 1 скрин - сама беседа и её участники)`, {
+                            keyboard: Keyboard.keyboard([
+                                Keyboard.textButton({ 
+                                    label: "Отмена",
+                                    color: 'negative',
+                                    payload: {
+                                        action: CANCEL
+                                    }
+                                })
+                            ])
+                        });
+                    }
+
+                    if(ctx.hasMessagePayload){
+                        ctx.scene.leave();
+                        return await ctx.send(`Заявка на завершение баттла - отменена!`, {
+                            keyboard: MAIN_MENU_KEYBOARD
+                        });
+                    }
+
+                    if(ctx.attachments.length < 3 || ctx.attachments.filter(x => x.type == 'photo').length < 3){
+                        return ctx.send(`Не менее 3-х скринов нужно!`);
+                    }
+
+                    ctx.scene.state.id = ctx.text.replace('#', '');
+                    
+                    let battle = await Battles.find({ $where: `/${ctx.scene.state.id}/i.test(this._id.str)` });
+                    if(!battle){
+                        ctx.scene.leave();
+                        return ctx.send(`Баттл с таким ID - не существует!`, {
+                            keyboard: MAIN_MENU_KEYBOARD
+                        });
+                    }
+
+                    let end_battle = await EndBattle.create({
+                        createdBy: ctx.senderId,
+                        battleId: battle.id
+                    });
+
+
+                    await ctx.send(`Заявка на завершение баттла`, {
+                        keyboard: Keyboard.keyboard([
+                            [
+                                Keyboard.textButton({
+                                    label: 'Одобрить',
+                                    color: 'positive',
+                                    payload: {
+                                        action: END_BATTLE_ACCEPT,
+                                        id: end_battle.id
+                                    }
+                                }),
+                                Keyboard.textButton({
+                                    label: 'Отказать',
+                                    color: 'negative',
+                                    payload: {
+                                        action: END_BATTLE_CANCEL,
+                                        id: end_battle.id
+                                    }
+                                })
+                            ]
+                        ]),
+                        attachment: ctx.attachments.filter(x => x.type == 'photo').map(x => x.toString()),
+                        user_ids: [...ss, ...ctx.stuffIds]
+                    });
+
+                    ctx.scene.leave();
+                    return await ctx.send(`Заявка на завершение баттла создана!\nОжидайте решение администрации!`, {
+                        keyboard: MAIN_MENU_KEYBOARD
+                    });
+                } catch(e) {
+                    ctx.scene.leave();
+                    return sendError(ctx, 'end-battle', e);
+                }
+            },
         ])
     ]
 }

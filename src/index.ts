@@ -22,7 +22,7 @@ const hm: HearManager <MessageContext>  = new HearManager();
 const scene:SceneManager                = new SceneManager();
 const sessions:SessionManager           = new SessionManager();
 
-const ss: Array<Number> = [10664995, 372434477, 171745503];
+const ss: Array<number> = [10664995, 372434477, 171745503];
 
 moment.locale('ru');
 
@@ -41,9 +41,9 @@ vk.updates.on('chat_invite_user', GroupKick(vk, ss));
         console.log(`Инициализация запуска VK-API...`);
         await vk.updates.start();
         console.log('Запускаю time-contoller...');
-        timeController(vk);
+        timeController(vk, ss);
         console.log(`Инициализация сцен...`);
-        scene.addScenes(BattleScene(vk));
+        scene.addScenes(BattleScene(vk, ss));
         scene.addScenes(UserScene(vk));
         console.log(`Бот успешно запущен, ${moment().format('HH:mm:ss, DD.MM.YYYY')}!`);
         console.log(`Погрешность максимум: 1 - 1.5 сек.`);

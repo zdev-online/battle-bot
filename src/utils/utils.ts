@@ -1,5 +1,5 @@
 import { Keyboard } from "vk-io";
-import { ABOUT_BATTLE, CANCEL, CHANGE_NICK, CREATE_BATTLE, GET_BATTLES, NEXT_BATTLE_PAGE, PREV_BATTLE_PAGE, PROFILE } from "./key-actions";
+import { ABOUT_BATTLE, CANCEL, CHANGE_NICK, CREATE_BATTLE, END_BATTLE, GET_BATTLES, NEXT_BATTLE_PAGE, PREV_BATTLE_PAGE, PROFILE } from "./key-actions";
 import { Document } from 'mongoose';
 import { Battles } from "../database/models";
 
@@ -102,6 +102,15 @@ const MAIN_MENU_KEYBOARD = Keyboard.keyboard([
                 action: PROFILE
             }
         })
+    ],
+    [
+        Keyboard.textButton({
+            label: 'Завершить баттл',
+            color: 'secondary',
+            payload: {
+                action: END_BATTLE
+            }
+        })
     ]
 ]);
 
@@ -129,7 +138,7 @@ const PROFILE_KEYBOARD = Keyboard.keyboard([
 const getBattleId = (battle: Battles) => {
     let id = String(battle.id);
 
-    return id.slice(0, 10);
+    return id.slice(0, 15);
 }
 
 const paginateBattles = async (vkId: number, page: number) => {

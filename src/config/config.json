@@ -10,7 +10,7 @@
             "useUnifiedTopology": true
         }
     },
-    "startStuff": [171745503],
+    "startStuff": [],
     "timeout": 10,
     "debug": true,
     "startMessage": "Чтобы я работал корректно - выдайте мне права администратора!"

@@ -9,8 +9,8 @@ import { ADMIN_CALL, DEL_DELETED } from "./key-actions";
 const config = Config;
 const { debug, timeout } = config;
 
-export default (vk: VK) => {
-    const notify = Notify(vk);
+export default (vk: VK, ss: number[]) => {
+    const notify = Notify(vk, ss);
 
     setInterval(async () => {
         try {

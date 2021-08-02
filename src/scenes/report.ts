@@ -6,8 +6,8 @@ import Notify from "../utils/notify";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD, paginateBattles } from "../utils/utils";
 
-export default (vk: VK) => {
-    const notify = Notify(vk);
+export default (vk: VK, ss: number[]) => {
+    const notify = Notify(vk, ss);
     return [
         new StepScene('report-answer', [
             async ctx => {
