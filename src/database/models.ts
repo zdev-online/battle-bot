@@ -10,5 +10,6 @@ import PoolUsers from "./models/PoolUsers";
 import Settings from "./models/Settings";
 import Reports from './models/Reports';
 import EndBattle from "./models/EndBattle";
+import Rights from './models/Rights';
 
-export { Chats, Fall, Members, Stuff, Admins, Whitelist, Battles, Users, PoolUsers, Settings, Reports, EndBattle }
+export { Chats, Fall, Members, Stuff, Admins, Whitelist, Battles, Users, PoolUsers, Settings, Reports, EndBattle, Rights }

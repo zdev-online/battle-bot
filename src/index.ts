@@ -112,6 +112,21 @@ vk.updates.on('chat_invite_user', GroupKick(vk, ss));
     }).catch(e => {});
 })(config.token);
 
+(async () => {
+    try {
+        let users = await Users.find();
+        if(!users.length){ return; }
+
+        await vk.api.messages.send({
+            user_ids: users.map(x => x.vkId),
+            random_id: getRandomId(),
+            message: 'Бот был перезагружен!'
+        });
+    } catch(e){
+        console.error(`Ошибка оповещения о перезагрузке! ${e.message}`);
+    }
+})();
+
 export { hm, vk, ss, scene }
 
 import './cmds/commands';

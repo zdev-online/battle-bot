@@ -1,6 +1,6 @@
 import { StepScene } from "@vk-io/scenes";
 import { resolveResource, VK, Keyboard } from "vk-io";
-import { Battles } from "../database/models";
+import { Battles, EndBattle } from "../database/models";
 import { ABOUT_BATTLE, ACCEPT, ACCEPT_BATTLE, CANCEL, CANCEL_BATTLE, END_BATTLE_ACCEPT, END_BATTLE_CANCEL, ENEMY, FRIEND, INVALID, NEXT_BATTLE_PAGE, PREV_BATTLE_PAGE, SELECT_BATTLE_TYPE, SINGLE_BATTLE } from "../utils/key-actions";
 import Notify from "../utils/notify";
 import sendError from "../utils/sendError";
@@ -536,12 +536,12 @@ export default (vk: VK, ss: number[]) => {
                                     });
                                 }
 
-                                if(!battle.attacks.length && !battle.defenders.length){
+                                if(!battle.attacks.length || !battle.defenders.length){
                                     let ids: number[] = [
                                         ...battle.attacks.map(x => x.vkId),
                                         ...battle.defenders.map(x => x.vkId)
                                     ]
-                                    await ctx.send(`Баттл #${getBattleId(battle)} - удален, т.к в одной из команд не осталось участников!`, {
+                                    ids.length && await ctx.send(`Баттл #${getBattleId(battle)} - удален, т.к в одной из команд не осталось участников!`, {
                                         user_ids: ids
                                     });
                                     battle.delete();
@@ -673,7 +673,7 @@ export default (vk: VK, ss: number[]) => {
                     ctx.scene.state.id = ctx.text.replace('#', '');
                     
                     let battle = await Battles.find({ $where: `/${ctx.scene.state.id}/i.test(this._id.str)` });
-                    if(!battle){
+                    if(!battle[0]){
                         ctx.scene.leave();
                         return ctx.send(`Баттл с таким ID - не существует!`, {
                             keyboard: MAIN_MENU_KEYBOARD
@@ -682,7 +682,7 @@ export default (vk: VK, ss: number[]) => {
 
                     let end_battle = await EndBattle.create({
                         createdBy: ctx.senderId,
-                        battleId: battle.id
+                        battleId: battle[0].id
                     });
 
 

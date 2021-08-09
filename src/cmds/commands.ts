@@ -1,5 +1,5 @@
 import { MessageContext, resolveResource, createCollectIterator, getRandomId, Keyboard } from 'vk-io';
-import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers, Settings, Reports } from '../database/models';
+import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers, Settings, Reports, Rights } from '../database/models';
 import { vk, hm, ss } from '../index';
 import sendError from '../utils/sendError';
 import moment from 'moment';
@@ -589,6 +589,33 @@ hm.hear(/^\/report/i, async (ctx: MessageContext) => {
         return await ctx.send(`Репорт - отправлен администрации!`);
     } catch (e) {
 
+    }
+});
+
+hm.hear(/\/glist/i, async (ctx) => {
+    try {
+        if(!ctx.text){ return;}
+        if (!hasRole(ctx, 'stuff')) { return ctx.send(`Недостаточно прав!`); }
+        
+        let id: string = ctx.text.split(' ')[1];
+        
+        let data = await resolveResource({ api: vk.api, resource: id });
+        if(data.type != 'user'){ return ctx.send(`Ссылка должна указывать на пользователя!`); }
+
+        let user = await Rights.findOne({ vkId: data.id });
+        if(!user){
+            user = await Rights.create({ vkId: data.id });
+        }
+
+        user.canInviteGroups = !user.canInviteGroups;
+        await user.save();
+
+        return ctx.send(`Теперь [id${data.id}|пользователь] ${user.canInviteGroups ? '' : 'не '}может приглашать группы в беседы, где есть надзиратель!`);
+    } catch(e){
+        if(e.message == 'Resource not found'){
+            return ctx.send(`Пользователь с таким ID - не найден!`);
+        }
+        return sendError(ctx, '/glist', e);
     }
 });
 

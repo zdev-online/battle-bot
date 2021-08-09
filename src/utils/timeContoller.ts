@@ -25,9 +25,16 @@ export default (vk: VK, ss: number[]) => {
             // debug && console.timeEnd('time-contoller-get-data');
             let now = new Date().getTime();
             // debug && console.time('time-contoller-loop-start');
+            let userCheck = await vk.api.users.get({ user_ids: data.map(x => x.vkId.toString())});
             for(let i = 0; i < data.length; i++){
                 let { vkId, chat, lastMessage } = data[i];
                 if(!chat.active){ continue; }
+                if(userCheck[i].deactivated){
+                    await vk.api.messages.removeChatUser({
+                        chat_id: chat.chatId,
+                        member_id: vkId
+                    });
+                }
                 let greatThen = Number(((now - (lastMessage - timeout * 1000)) / 1000).toFixed(0));
                 // debug && console.log(`[timeContoller]: Не писал(а) более G: ${greatThen}|T: ${timeout}: https://vk.com/${vkId > 0 ? `id${vkId}` : `club${+vkId}`}`)
                 notify.stuff(stuff, vkId, greatThen, chat.chatId, lastMessage, now).catch(e => {}).then(() => {
