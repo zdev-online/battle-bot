@@ -69,3 +69,14 @@ export default (vk: VK) => {
         return wall;
     }
 }
+
+export const createCustomPost = (vk: VK) => async (msg: string, attach: string[]) => {
+    let [{ id: gid }] = await vk.api.groups.getById({});
+    let wall = await user.api.wall.post({
+        owner_id: -gid,
+        message: msg,
+        attachments: attach,
+        from_group: true
+    });
+    return wall;
+}

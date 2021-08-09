@@ -1,13 +1,13 @@
 import { Keyboard, MessageContext, VK } from "vk-io";
 import config from "../config/config";
-import { Battles, Chats, PoolUsers, Reports, Users } from "../database/models";
-import createBattlePost from "../utils/createBattlePost";
+import { Battles, Chats, EndBattle, PoolUsers, Reports, Users } from "../database/models";
+import createBattlePost, { createCustomPost } from "../utils/createBattlePost";
 import {
     ABOUT_BATTLE,
     ADMIN_ACCEPT_BATTLE,
     ADMIN_CALL,
     ADMIN_CANCEL_BATTLE,
-    CREATE_BATTLE, DEL_DELETED, END_BATTLE, GET_BATTLES, KICK, PROFILE, REPORT_ANSWER
+    CREATE_BATTLE, DEL_DELETED, END_BATTLE, END_BATTLE_ACCEPT, END_BATTLE_CANCEL, GET_BATTLES, KICK, PROFILE, REPORT_ANSWER
 } from "../utils/key-actions";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD } from "../utils/utils";
@@ -111,6 +111,37 @@ export default (vk: VK, ss: Array<Number>) => {
                     }
                     case END_BATTLE: {
                         return ctx.scene.enter('end-battle');
+                    }
+                    case END_BATTLE_ACCEPT: {
+                        let end_battle = await EndBattle.findById(ctx.messagePayload.id);
+                        if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
+                        let battle = await Battles.findById(end_battle.battleId);
+                        if(!battle){
+                            end_battle.delete(); 
+                            return ctx.send(`Баттл не найден! Заявка - удалена!`); 
+                        }
+                        
+                        let defData = await Users.findOne({ vkId: ctx.messagePayload.def });
+                        if(!defData){ return ctx.send(`Проигравший не зарегистрирован!`); }
+                        let winData = await Users.findOne({ vkId: end_battle.createdBy });
+                        if(!winData){ return ctx.send(`Победитель не зарегистрирован!`); }
+
+                        let message = `Баттл ${['на ДД', 'от рук'][battle.type]} ${getBattleId(battle)}\n`;
+                        message += `Победитель: [id${winData.vkId}|${winData.nickname}]\n`;
+                        message += `Проигравший: [id${defData.vkId}|${defData.nickname}] - должен ${battle.bet}\n`;
+                        await createCustomPost(vk)(message, ctx.messagePayload.imgs.split(','));
+                        return ctx.send(`Пост об окончании баттла - был создан!`, {
+                            user_ids: [ctx.senderId, end_battle.createdBy]
+                        });
+                    } 
+                    case END_BATTLE_CANCEL: {
+                        let end_battle = await EndBattle.findById(ctx.messagePayload.id);
+                        if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
+                        await ctx.send('Заявка на заверешения баттла - не была одобрена!', {
+                            user_ids: end_battle.createdBy
+                        });
+                        end_battle.delete();
+                        return ctx.send(`Заявка была не одобрена!`);
                     }
                 }
             }

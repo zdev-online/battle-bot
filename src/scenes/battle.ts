@@ -644,6 +644,41 @@ export default (vk: VK, ss: number[]) => {
             async ctx => {
                 try {
                     if(ctx.scene.step.firstTime || !ctx.text){
+                        return ctx.send('Пришли мне ID | Ссылку на проигравшего!', {
+                            keyboard: Keyboard.keyboard([
+                                Keyboard.textButton({ 
+                                    label: "Отмена",
+                                    color: 'negative',
+                                    payload: {
+                                        action: CANCEL
+                                    }
+                                })
+                            ])
+                        });
+                    }
+                    if(ctx.hasMessagePayload){
+                        ctx.scene.leave();
+                        return await ctx.send(`Заявка на завершение баттла - отменена!`, {
+                            keyboard: MAIN_MENU_KEYBOARD
+                        });
+                    }
+
+                    let info = await resolveResource({ api: vk.api, resource: ctx.text });
+                    if(info.type != 'user'){ return ctx.send('Ссылка должна указывать на пользователя!');}
+
+                    ctx.scene.state.defenderId = info.id;
+                    return ctx.scene.step.next();
+                } catch(e){
+                    if(e.message == 'Resource not found'){
+                        return ctx.send(`Неверный ID или ссылка! Попробуйте еще раз!`);
+                    }
+                    ctx.scene.leave();
+                    return sendError(ctx, 'end-battle', e);
+                }
+            },
+            async ctx => {
+                try {
+                    if(ctx.scene.step.firstTime || !ctx.text){
                         ctx.scene.state.photos = [];
                         ctx.scene.state.id = '';
                         return ctx.send(`Пришли мне ID баттла и 3 скриншота (2 скрина - слёт противника, 1 скрин - сама беседа и её участники)`, {
@@ -694,7 +729,9 @@ export default (vk: VK, ss: number[]) => {
                                     color: 'positive',
                                     payload: {
                                         action: END_BATTLE_ACCEPT,
-                                        id: end_battle.id
+                                        id: end_battle.id,
+                                        imgs: ctx.attachments.filter(x => x.type == 'photo').map(x => x.toString()).join(','),
+                                        def: ctx.scene.state.defenderId
                                     }
                                 }),
                                 Keyboard.textButton({
