@@ -12,6 +12,7 @@ import { SessionManager } from '@vk-io/session';
 import { SceneManager } from '@vk-io/scenes';
 import BattleScene from './scenes/battle';
 import UserScene from './scenes/user';
+import ReportScene from './scenes/report';
 import FirstTime from './middlewares/FirstTime';
 import SceneIntercept from './middlewares/SceneIntercept';
 
@@ -45,6 +46,7 @@ vk.updates.on('chat_invite_user', GroupKick(vk, ss));
         console.log(`Инициализация сцен...`);
         scene.addScenes(BattleScene(vk, ss));
         scene.addScenes(UserScene(vk));
+        scene.addScenes(ReportScene(vk, ss));
         console.log(`Бот успешно запущен, ${moment().format('HH:mm:ss, DD.MM.YYYY')}!`);
         console.log(`Погрешность максимум: 1 - 1.5 сек.`);
     } catch (e){
@@ -112,20 +114,20 @@ vk.updates.on('chat_invite_user', GroupKick(vk, ss));
     }).catch(e => {});
 })(config.token);
 
-(async () => {
-    try {
-        let users = await Users.find();
-        if(!users.length){ return; }
+// (async () => {
+//     try {
+//         let users = await Users.find();
+//         if(!users.length){ return; }
 
-        await vk.api.messages.send({
-            user_ids: users.map(x => x.vkId),
-            random_id: getRandomId(),
-            message: 'Бот был перезагружен!'
-        });
-    } catch(e){
-        console.error(`Ошибка оповещения о перезагрузке! ${e.message}`);
-    }
-})();
+//         await vk.api.messages.send({
+//             user_ids: users.map(x => x.vkId),
+//             random_id: getRandomId(),
+//             message: 'Бот был перезагружен!'
+//         });
+//     } catch(e){
+//         console.error(`Ошибка оповещения о перезагрузке! ${e.message}`);
+//     }
+// })();
 
 export { hm, vk, ss, scene }
 

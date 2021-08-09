@@ -568,7 +568,7 @@ hm.hear(/^\/cc/i, async (ctx: MessageContext) => {
 hm.hear(/^\/report/i, async (ctx: MessageContext) => {
     try {
         if(!ctx.text){ return; }
-        let text = ctx.text.replace('/report ', '');
+        let text = ctx.text.replace('/report', '');
         if(!text.length){ return ctx.send(`Текст обращения отсутствует!\nПример: /report Какой-то текст`); }
         let report = await Reports.create({ reportId: ctx.senderId, state: 'open' });
         let ids = [...ctx.stuffIds, ...ss];

@@ -51,7 +51,7 @@ export default (vk: VK, ss: number[]) => {
                     }
 
                     let [{ first_name, last_name, id }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
-                    await ctx.send(`Ответ от администратора [id${id}|${first_name} ${last_name}] ответил на репорт!\nОтвет: ${ctx.text}`, {
+                    await ctx.send(`Ответ от администратора [id${id}|${first_name} ${last_name}] на репорт!\nОтвет: ${ctx.text}`, {
                         user_ids: report.reportId
                     });
                     return await ctx.send(`Ответ отправлен!`);
