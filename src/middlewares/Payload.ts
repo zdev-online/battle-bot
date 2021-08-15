@@ -105,7 +105,8 @@ export default (vk: VK, ss: Array<Number>) => {
                     case REPORT_ANSWER: {
                         return ctx.scene.enter('report-answer', {
                             state: {
-                                id: ctx.messagePayload.id
+                                id: ctx.messagePayload.id,
+                                peerId: ctx.messagePayload.peerId
                             }
                         });
                     }

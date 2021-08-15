@@ -24,7 +24,7 @@ export default (vk: VK) => {
                 return ctx.scene.step.next();
             },
             async ctx => {
-                if (ctx.scene.step.firstTime || !ctx.text) {
+                if (ctx.scene.step.firstTime || !ctx.text || !ctx.messagePayload) {
                     return ctx.send(`Зарегистроваться под ником: ${ctx.scene.state.nickname}?`, {
                         keyboard: Keyboard.keyboard([
                             Keyboard.textButton({ label: "Да", color: 'positive', payload: { action: 'ACCEPT' } }),

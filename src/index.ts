@@ -30,7 +30,7 @@ moment.locale('ru');
 vk.updates.on('message_new', sessions.middleware);
 vk.updates.on('message_new', scene.middleware);
 vk.updates.on('message_new', FirstTime(vk));
-vk.updates.on('message_new', StuffM(vk));
+vk.updates.on('message_new', StuffM(vk, ss));
 vk.updates.on('message_new', SceneIntercept)
 vk.updates.on('message_new', Payload(vk, ss));
 vk.updates.on('message_new', hm.middleware);

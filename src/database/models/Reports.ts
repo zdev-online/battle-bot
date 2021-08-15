@@ -9,6 +9,7 @@ interface Reports {
 const Schema = new mongoose.Schema({
     closedBy: { type: Number, required: false, default: -1 },
     reportId: { type: Number, required: true },
+    state: { type: String, required: false, default: 'open'}
 });
 
 export default mongoose.model<Reports>('Report', Schema, 'reports');

@@ -570,25 +570,26 @@ hm.hear(/^\/report/i, async (ctx: MessageContext) => {
         if(!ctx.text){ return; }
         let text = ctx.text.replace('/report', '');
         if(!text.length){ return ctx.send(`Текст обращения отсутствует!\nПример: /report Какой-то текст`); }
-        let report = await Reports.create({ reportId: ctx.senderId, state: 'open' });
-        let ids = [...ctx.stuffIds, ...ss];
+        let report = await Reports.create({ reportId: ctx.senderId });
+        config.debug && console.log(`Report: ${JSON.stringify(report)}`);
         let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
         await ctx.send(`Репорт от пользователя [id${ctx.senderId}|${first_name} ${last_name}]!\nЕго текст: ${text}`, { 
-            peer_ids: ids,
+            user_ids: ctx.allStuffIds,
             keyboard: Keyboard.keyboard([
                 Keyboard.textButton({ 
                     label: 'Ответить', 
                     color: 'positive', 
                     payload: {
                         action: REPORT_ANSWER,
-                        id: report.id
+                        id: report.id,
+                        peerId: ctx.peerId
                     }
                 })
             ]).inline(true)
         });
         return await ctx.send(`Репорт - отправлен администрации!`);
     } catch (e) {
-
+        return sendError(ctx, '/report', e);
     }
 });
 

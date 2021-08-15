@@ -5,7 +5,7 @@ import config from '../config/config';
 
 const debug = config.debug;
 
-export default (vk: VK) => async (ctx: MessageContext, next: Function) => {
+export default (vk: VK, ss: number[]) => async (ctx: MessageContext, next: Function) => {
     try { 
         debug && console.log(`Stuff-Enter`);
         ctx.adminIds    = []
@@ -32,6 +32,7 @@ export default (vk: VK) => async (ctx: MessageContext, next: Function) => {
         ctx.stuff       = stuff;
         ctx.isStuff     = ctx.stuffIds.includes(ctx.senderId);
         debug && console.log(`Stuff-Go-Next`);
+        ctx.allStuffIds = [...ctx.stuffIds, ...ctx.adminIds, ...ss];
         return next();
     } catch(e){
         return sendError(ctx, 'StuffM', e);
