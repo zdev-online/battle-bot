@@ -102,15 +102,6 @@ const MAIN_MENU_KEYBOARD = Keyboard.keyboard([
                 action: PROFILE
             }
         })
-    ],
-    [
-        Keyboard.textButton({
-            label: 'Завершить баттл',
-            color: 'secondary',
-            payload: {
-                action: END_BATTLE
-            }
-        })
     ]
 ]);
 

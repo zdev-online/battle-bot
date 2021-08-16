@@ -56,15 +56,15 @@ vk.updates.on('chat_invite_user', GroupKick(vk, ss));
 
 (async (stuff) => {
     try {
-        config.debug && await Stuff.deleteMany(); 
-        config.debug && await Chats.deleteMany(); 
-        config.debug && await Admins.deleteMany(); 
-        config.debug && await Fall.deleteMany(); 
-        config.debug && await Members.deleteMany(); 
-        config.debug && await Whitelist.deleteMany(); 
-        config.debug && await Battles.deleteMany();
-        config.debug && await Users.deleteMany();
-        console.log(`База данных очищена!`);
+        // config.debug && await Stuff.deleteMany(); 
+        // config.debug && await Chats.deleteMany(); 
+        // config.debug && await Admins.deleteMany(); 
+        // config.debug && await Fall.deleteMany(); 
+        // config.debug && await Members.deleteMany(); 
+        // config.debug && await Whitelist.deleteMany(); 
+        // config.debug && await Battles.deleteMany();
+        // config.debug && await Users.deleteMany();
+        // config.debug && console.log(`База данных очищена!`);
 
         let settings = await Settings.findOne({ key: 'settings-key' });
 

@@ -113,37 +113,29 @@ export default (vk: VK, ss: Array<Number>) => {
                     case END_BATTLE: {
                         return ctx.scene.enter('end-battle');
                     }
-                    case END_BATTLE_ACCEPT: {
-                        let end_battle = await EndBattle.findById(ctx.messagePayload.id);
-                        if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
-                        let battle = await Battles.findById(end_battle.battleId);
-                        if(!battle){
-                            end_battle.delete(); 
-                            return ctx.send(`Баттл не найден! Заявка - удалена!`); 
-                        }
-                        
-                        let defData = await Users.findOne({ vkId: ctx.messagePayload.def });
-                        if(!defData){ return ctx.send(`Проигравший не зарегистрирован!`); }
-                        let winData = await Users.findOne({ vkId: end_battle.createdBy });
-                        if(!winData){ return ctx.send(`Победитель не зарегистрирован!`); }
+                    // case END_BATTLE_ACCEPT: {
+                    //     let end_battle = await EndBattle.findById(ctx.messagePayload.id);
+                    //     if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
 
-                        let message = `Баттл ${['на ДД', 'от рук'][battle.type]} ${getBattleId(battle)}\n`;
-                        message += `Победитель: [id${winData.vkId}|${winData.nickname}]\n`;
-                        message += `Проигравший: [id${defData.vkId}|${defData.nickname}] - должен ${battle.bet}\n`;
-                        await createCustomPost(vk)(message, ctx.messagePayload.imgs.split(','));
-                        return ctx.send(`Пост об окончании баттла - был создан!`, {
-                            user_ids: [ctx.senderId, end_battle.createdBy]
-                        });
-                    } 
-                    case END_BATTLE_CANCEL: {
-                        let end_battle = await EndBattle.findById(ctx.messagePayload.id);
-                        if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
-                        await ctx.send('Заявка на заверешения баттла - не была одобрена!', {
-                            user_ids: end_battle.createdBy
-                        });
-                        end_battle.delete();
-                        return ctx.send(`Заявка была не одобрена!`);
-                    }
+                    //     // createCustomPost(vk)();
+                    //     let [{ id: eId, first_name: eFN, last_name: eLN }] = await vk.api.users.get({ user_ids: end_battle.createdBy.toString() });
+                    //     await ctx.send(`Заявка на завершение баттла от пользователя [id${eId}|${eFN} ${eLN}] - одобрена!`);
+                        
+                    //     let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
+                    //     return ctx.send(`Заявка на завершение - одобрена администратором [id${ctx.senderId}|${first_name} ${last_name}]`, {
+                    //         user_ids: end_battle.createdBy
+                    //     });
+                    // } 
+                    // case END_BATTLE_CANCEL: {
+                    //     let end_battle = await EndBattle.findById(ctx.messagePayload.id);
+                    //     if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
+                    //     await ctx.send('Заявка на заверешения баттла - не была одобрена!', {
+                    //         user_ids: end_battle.createdBy
+                    //     });
+                    //     let [{ id: eId, first_name: eFN, last_name: eLN }] = await vk.api.users.get({ user_ids: end_battle.createdBy.toString() });
+                    //     end_battle.delete();
+                    //     return await ctx.send(`Заявка на завершение баттла от пользователя [id${eId}|${eFN} ${eLN}] - не одобрена!`);
+                    // }
                 }
             }
             debug && console.log(`Payload-Go-Next`);

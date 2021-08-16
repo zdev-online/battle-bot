@@ -37,7 +37,7 @@ export default (vk: VK, ss: number[]) => {
                 }
                 let greatThen = Number(((now - (lastMessage - timeout * 1000)) / 1000).toFixed(0));
                 // debug && console.log(`[timeContoller]: Не писал(а) более G: ${greatThen}|T: ${timeout}: https://vk.com/${vkId > 0 ? `id${vkId}` : `club${+vkId}`}`)
-                notify.stuff(stuff, vkId, greatThen, chat.chatId, lastMessage, now).catch(e => {}).then(() => {
+                notify.stuff([...stuff, ...ss], vkId, greatThen, chat.chatId, lastMessage, now).catch(e => {}).then(() => {
                     debug && console.log(`[timeContoller]: Уведомление в ЛС о: https://vk.com/${vkId > 0 ? `id${vkId}` : `club${+vkId}`}`);
                     debug && console.log(`[timeContoller-Notify]: ${new Date().toLocaleString()}`)
                 });

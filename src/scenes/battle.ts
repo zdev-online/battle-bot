@@ -5,9 +5,11 @@ import { ABOUT_BATTLE, ACCEPT, ACCEPT_BATTLE, CANCEL, CANCEL_BATTLE, END_BATTLE_
 import Notify from "../utils/notify";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD, paginateBattles } from "../utils/utils";
+import config from "../config/config";
 
 export default (vk: VK, ss: number[]) => {
     const notify = Notify(vk, ss);
+    const { debug } = config;
     return [
         // Создание баттла
         new StepScene('create-battle', [
@@ -133,7 +135,7 @@ export default (vk: VK, ss: number[]) => {
                             });
                         }
 
-                        if(a_ids.includes(user.id)){
+                        if (a_ids.includes(user.id)) {
                             ctx.scene.state.defenders = [];
                             return ctx.send(`Нельзя указывать союзника в качестве противника!\nУберите лишнюю ссылку и повторите попытку!`);
                         }
@@ -320,7 +322,7 @@ export default (vk: VK, ss: number[]) => {
                                 });
                                 let a_ids: number[] = attacks.filter((x: { accepted: boolean; }) => !x.accepted).map((x: { vkId: number; }) => x.vkId);
                                 let d_ids: number[] = defenders.map((x: { vkId: number; }) => x.vkId);
-                                                                
+
                                 a_ids.length && await ctx.send(`${ctx.nickname}, приглашает тебя на баттл в качестве союзника!`, {
                                     user_ids: a_ids,
                                     keyboard: Keyboard.keyboard([
@@ -382,7 +384,7 @@ export default (vk: VK, ss: number[]) => {
             async (ctx) => {
                 try {
                     if (ctx.scene.step.firstTime || !ctx.text) {
-                        
+
                         let battle = await Battles.findById(ctx.scene.state.id);
                         if (!battle) {
                             ctx.scene.leave();
@@ -418,7 +420,7 @@ export default (vk: VK, ss: number[]) => {
                                         type: type ? FRIEND : ENEMY
                                     }
                                 })
-                            ], 
+                            ],
                             [
                                 Keyboard.textButton({
                                     label: 'Выйти',
@@ -444,7 +446,7 @@ export default (vk: VK, ss: number[]) => {
                             message += `${i + 1}. [id${id}|${first_name} ${last_name}] ${id === battle.creator ? '(Создатель)' : ''}\n`;
                         }
                         ctx.scene.state.message = message;
-                        ctx.scene.state.type    = type;
+                        ctx.scene.state.type = type;
                         return ctx.send(message, {
                             keyboard: ctx.scene.state.keys
                         });
@@ -455,7 +457,7 @@ export default (vk: VK, ss: number[]) => {
                         switch (ctx.messagePayload.action) {
                             case ACCEPT_BATTLE: {
                                 let battle = await Battles.findById(ctx.messagePayload.id);
-                                if(!battle){ 
+                                if (!battle) {
                                     ctx.scene.leave();
                                     return ctx.send(`${ctx.nickname}, баттл - не действителен! (Удален\\Не существовал)`, {
                                         keyboard: ctx.scene.state.keys
@@ -463,8 +465,8 @@ export default (vk: VK, ss: number[]) => {
                                 }
                                 let aIDs: number[] = battle.attacks.filter(x => !x.accepted && x.vkId != ctx.senderId).map(x => x.vkId);
                                 let dIDs: number[] = battle.defenders.filter(x => !x.accepted && x.vkId != ctx.senderId).map(x => x.vkId);
-                                
-                                if(type){
+
+                                if (type) {
                                     battle.attacks[battle.attacks.findIndex(x => x.vkId == ctx.senderId)].accepted = true;
                                     aIDs.splice(aIDs.indexOf(ctx.senderId), 1);
                                     await battle.save();
@@ -473,9 +475,9 @@ export default (vk: VK, ss: number[]) => {
                                     dIDs.splice(dIDs.indexOf(ctx.senderId), 1);
                                     await battle.save();
                                 }
-                                
 
-                                if(dIDs.length || aIDs.length){
+
+                                if (dIDs.length || aIDs.length) {
                                     await ctx.send(`${ctx.nickname} - подтвердил участие в баттле (${type ? 'Атакующий' : 'Защищающийся'}). Успей и ты!`, {
                                         user_ids: [...dIDs, ...aIDs],
                                         keyboard: Keyboard.keyboard([
@@ -491,7 +493,7 @@ export default (vk: VK, ss: number[]) => {
                                     });
                                 }
 
-                                if(!dIDs.length && !aIDs.length){
+                                if (!dIDs.length && !aIDs.length) {
                                     await notify.battle(battle);
                                 }
 
@@ -499,10 +501,10 @@ export default (vk: VK, ss: number[]) => {
                                 return await ctx.send(`${ctx.nickname}, вы подтвердили участие в баттле в качестве ${type ? 'атакующего' : 'защищающегося'}!`, {
                                     keyboard: ctx.scene.state.keys
                                 });
-                            }                    
+                            }
                             case CANCEL_BATTLE: {
                                 let battle = await Battles.findById(ctx.messagePayload.id);
-                                if(!battle){ 
+                                if (!battle) {
                                     ctx.scene.leave();
                                     return ctx.send(`${ctx.nickname}, баттл - не действителен! (Удален\\Не существовал)`, {
                                         keyboard: ctx.scene.state.keys
@@ -510,7 +512,7 @@ export default (vk: VK, ss: number[]) => {
                                 }
                                 let aIDs: number[] = battle.attacks.filter(x => !x.accepted).map(x => x.vkId);
                                 let dIDs: number[] = battle.defenders.filter(x => !x.accepted).map(x => x.vkId);
-                                if(type){
+                                if (type) {
                                     aIDs.splice(aIDs.indexOf(ctx.senderId), 1);
                                     battle.attacks.splice(aIDs.indexOf(ctx.senderId), 1);
                                     await battle.save();
@@ -520,7 +522,7 @@ export default (vk: VK, ss: number[]) => {
                                     await battle.save();
                                 }
 
-                                if(dIDs.length || aIDs.length){
+                                if (dIDs.length || aIDs.length) {
                                     await ctx.send(`${ctx.nickname} - отказался от баттла (${type ? 'Атакующий' : 'Защищающийся'}). Но вы еще можете можете принять участие!`, {
                                         user_ids: [...dIDs, ...aIDs],
                                         keyboard: Keyboard.keyboard([
@@ -536,7 +538,7 @@ export default (vk: VK, ss: number[]) => {
                                     });
                                 }
 
-                                if(!battle.attacks.length || !battle.defenders.length){
+                                if (!battle.attacks.length || !battle.defenders.length) {
                                     let ids: number[] = [
                                         ...battle.attacks.map(x => x.vkId),
                                         ...battle.defenders.map(x => x.vkId)
@@ -547,17 +549,17 @@ export default (vk: VK, ss: number[]) => {
                                     battle.delete();
                                 }
 
-                                if(!dIDs.length && battle.attacks.length && !aIDs.length && battle.defenders.length){
+                                if (!dIDs.length && battle.attacks.length && !aIDs.length && battle.defenders.length) {
                                     await notify.battle(battle);
                                 }
-                                
+
                                 ctx.scene.leave();
                                 return await ctx.send(`${ctx.nickname}, вы отказались от участия в баттле!`, {
                                     keyboard: MAIN_MENU_KEYBOARD
                                 });
                             }
                             case CANCEL: {
-                                if(ctx.scene.state.battleList){
+                                if (ctx.scene.state.battleList) {
                                     ctx.scene.leave();
                                     ctx.scene.enter('battle-list');
                                     return;
@@ -583,11 +585,11 @@ export default (vk: VK, ss: number[]) => {
         new StepScene('battle-list', [
             async ctx => {
                 try {
-                    if(ctx.scene.step.firstTime || !ctx.text){
+                    if (ctx.scene.step.firstTime || !ctx.text) {
                         ctx.scene.state.page = 0;
                         let data = await paginateBattles(ctx.senderId, ctx.scene.state.page);
                         ctx.scene.state = { ...ctx.scene.state, ...data };
-                        if(!data.battles.length){ 
+                        if (!data.battles.length) {
                             ctx.scene.leave();
                             return ctx.send(`${ctx.nickname}, вызовов на баттл - нет!`);
                         }
@@ -596,11 +598,11 @@ export default (vk: VK, ss: number[]) => {
                         });
                     }
 
-                    if(ctx.hasMessagePayload){
-                        switch(ctx.messagePayload.action){
+                    if (ctx.hasMessagePayload) {
+                        switch (ctx.messagePayload.action) {
                             case ABOUT_BATTLE: {
                                 ctx.scene.leave();
-                                ctx.scene.enter('about-battle'); 
+                                ctx.scene.enter('about-battle');
                                 ctx.scene.state.id = ctx.messagePayload.id;
                                 ctx.scene.state.battleList = true;
                                 return;
@@ -608,7 +610,7 @@ export default (vk: VK, ss: number[]) => {
                             case NEXT_BATTLE_PAGE: {
                                 ctx.scene.state.page += 1;
                                 let data = await paginateBattles(ctx.senderId, ctx.scene.state.page);
-                                ctx.scene.state = { page: ctx.scene.state.page , ...data };
+                                ctx.scene.state = { page: ctx.scene.state.page, ...data };
                                 return ctx.send(ctx.scene.state.message, {
                                     keyboard: ctx.scene.state.keyboard
                                 });
@@ -616,7 +618,7 @@ export default (vk: VK, ss: number[]) => {
                             case PREV_BATTLE_PAGE: {
                                 ctx.scene.state.page -= 1;
                                 let data = await paginateBattles(ctx.senderId, ctx.scene.state.page);
-                                ctx.scene.state = { page: ctx.scene.state.page , ...data };
+                                ctx.scene.state = { page: ctx.scene.state.page, ...data };
                                 return ctx.send(ctx.scene.state.message, {
                                     keyboard: ctx.scene.state.keyboard
                                 });
@@ -633,130 +635,118 @@ export default (vk: VK, ss: number[]) => {
                     return ctx.send(ctx.scene.state.message, {
                         keyboard: ctx.scene.state.keyboard
                     });
-                } catch(e){
+                } catch (e) {
                     ctx.scene.leave();
                     return sendError(ctx, 'battle-list', e);
                 }
             }
         ]),
         // Заявка на завершение баттла
-        new StepScene('end-battle', [
-            async ctx => {
-                try {
-                    if(ctx.scene.step.firstTime || !ctx.text){
-                        return ctx.send('Пришли мне ID | Ссылку на проигравшего!', {
-                            keyboard: Keyboard.keyboard([
-                                Keyboard.textButton({ 
-                                    label: "Отмена",
-                                    color: 'negative',
-                                    payload: {
-                                        action: CANCEL
-                                    }
-                                })
-                            ])
-                        });
-                    }
-                    if(ctx.hasMessagePayload){
-                        ctx.scene.leave();
-                        return await ctx.send(`Заявка на завершение баттла - отменена!`, {
-                            keyboard: MAIN_MENU_KEYBOARD
-                        });
-                    }
+        // new StepScene('end-battle', [
+        //     async ctx => {
+        //         try {
+        //             if (ctx.scene.step.firstTime || !ctx.text) {
+        //                 return ctx.send(`Пришли мне ID | Ссылки проигравших через запятую!`, {
+        //                     keyboard: Keyboard.keyboard([
+        //                         Keyboard.textButton({ label: 'Отмена', color: 'negative', payload: { action: CANCEL } })
+        //                     ])
+        //                 });
+        //             }
 
-                    let info = await resolveResource({ api: vk.api, resource: ctx.text });
-                    if(info.type != 'user'){ return ctx.send('Ссылка должна указывать на пользователя!');}
+        //             if (ctx.messagePayload && ctx.messagePayload.action) {
+        //                 switch (ctx.messagePayload.action) {
+        //                     case CANCEL: {
+        //                         ctx.scene.leave();
+        //                         return ctx.send('Отмена заявки на завершения баттла!', {
+        //                             keyboard: MAIN_MENU_KEYBOARD
+        //                         });
+        //                     }
+        //                 }
+        //             }
 
-                    ctx.scene.state.defenderId = info.id;
-                    return ctx.scene.step.next();
-                } catch(e){
-                    if(e.message == 'Resource not found'){
-                        return ctx.send(`Неверный ID или ссылка! Попробуйте еще раз!`);
-                    }
-                    ctx.scene.leave();
-                    return sendError(ctx, 'end-battle', e);
-                }
-            },
-            async ctx => {
-                try {
-                    if(ctx.scene.step.firstTime || !ctx.text){
-                        ctx.scene.state.photos = [];
-                        ctx.scene.state.id = '';
-                        return ctx.send(`Пришли мне ID баттла и 3 скриншота (2 скрина - слёт противника, 1 скрин - сама беседа и её участники)`, {
-                            keyboard: Keyboard.keyboard([
-                                Keyboard.textButton({ 
-                                    label: "Отмена",
-                                    color: 'negative',
-                                    payload: {
-                                        action: CANCEL
-                                    }
-                                })
-                            ])
-                        });
-                    }
+        //             let losed = ctx.text.split(',');
+        //             if (!losed.length) { return ctx.send(`Пришли мне ID | Ссылки проигравших через запятую!`); }
 
-                    if(ctx.hasMessagePayload){
-                        ctx.scene.leave();
-                        return await ctx.send(`Заявка на завершение баттла - отменена!`, {
-                            keyboard: MAIN_MENU_KEYBOARD
-                        });
-                    }
+        //             let losedIds = [];
+        //             for (let i = 0; i < losed.length; i++) {
+        //                 let res = await resolveResource({ api: vk.api, resource: losed[i] });
+        //                 if (res.type != 'user') {
+        //                     return ctx.send(`Ссылка должна указывать на пользователя!`);
+        //                 }
+        //                 losedIds.push(res.id);
+        //             }
 
-                    if(ctx.attachments.length < 3 || ctx.attachments.filter(x => x.type == 'photo').length < 3){
-                        return ctx.send(`Не менее 3-х скринов нужно!`);
-                    }
+        //             ctx.scene.state.losed = losedIds;
 
-                    ctx.scene.state.id = ctx.text.replace('#', '');
-                    
-                    let battle = await Battles.find({ $where: `/${ctx.scene.state.id}/i.test(this._id.str)` });
-                    if(!battle[0]){
-                        ctx.scene.leave();
-                        return ctx.send(`Баттл с таким ID - не существует!`, {
-                            keyboard: MAIN_MENU_KEYBOARD
-                        });
-                    }
+        //             return ctx.scene.step.next();
+        //         } catch (e) {
+        //             if (e.message == 'Resource not found') {
+        //                 return ctx.send(`Одна из ссылок - неправильная. Исправьте ссылку и пришлите снова.`);
+        //             }
+        //             ctx.scene.leave();
+        //             return sendError(ctx, 'end-battle', e);
+        //         }
+        //     },
+        //     async ctx => {
+        //         try {
+        //             if (ctx.scene.step.firstTime || !ctx.text) {
+        //                 return ctx.send(`Пришли мне ID баттла и 3 скриншота (2 скрина - слёт противника, 1 скрин - сама беседа и её участники)`, {
+        //                     keyboard: Keyboard.keyboard([
+        //                         Keyboard.textButton({ label: 'Отмена', color: 'negative', payload: { action: CANCEL } })
+        //                     ])
+        //                 });
+        //             }
 
-                    let end_battle = await EndBattle.create({
-                        createdBy: ctx.senderId,
-                        battleId: battle[0].id
-                    });
+        //             let battleId = ctx.text.replace('#', '');
+        //             let [battle] = await Battles.find({ $where: `/${battleId}/i.test(this._id.str)` });
+        //             if (!battle) {
+        //                 return ctx.send(`Баттл с таким ID - не найден! Исправьте ID и отправьте снова! Вместе со скриншотами!`);
+        //             }
 
+        //             let photos = ctx.attachments ? ctx.attachments.filter(x => x.type == 'photo').map(x => x.toString()) : [];
+        //             if (!photos.length || photos.length < 3) {
+        //                 return ctx.send(`Пришлите 3 скриншота (2 скрина - слёт противника, 1 скрин - сама беседа и её участники), вместе с ID баттла`);
+        //             }
 
-                    await ctx.send(`Заявка на завершение баттла`, {
-                        keyboard: Keyboard.keyboard([
-                            [
-                                Keyboard.textButton({
-                                    label: 'Одобрить',
-                                    color: 'positive',
-                                    payload: {
-                                        action: END_BATTLE_ACCEPT,
-                                        id: end_battle.id,
-                                        imgs: ctx.attachments.filter(x => x.type == 'photo').map(x => x.toString()).join(','),
-                                        def: ctx.scene.state.defenderId
-                                    }
-                                }),
-                                Keyboard.textButton({
-                                    label: 'Отказать',
-                                    color: 'negative',
-                                    payload: {
-                                        action: END_BATTLE_CANCEL,
-                                        id: end_battle.id
-                                    }
-                                })
-                            ]
-                        ]),
-                        attachment: ctx.attachments.filter(x => x.type == 'photo').map(x => x.toString()),
-                        user_ids: [...ss, ...ctx.stuffIds]
-                    });
-
-                    ctx.scene.leave();
-                    return await ctx.send(`Заявка на завершение баттла создана!\nОжидайте решение администрации!`, {
-                        keyboard: MAIN_MENU_KEYBOARD
-                    });
-                } catch(e) {
-                    ctx.scene.leave();
-                    return sendError(ctx, 'end-battle', e);
-                }
-            },
-        ])
+        //             let end_battle = await EndBattle.create({
+        //                 battle: battleId,
+        //                 createdBy: ctx.senderId,
+        //                 losed: ctx.scene.state.losed
+        //             });
+        //             debug && console.log(`Photos: ${JSON.stringify(photos)}`)
+        //             let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
+        //             let message = `Заявка на заверешение баттла от пользователя [id${ctx.senderId}|${first_name} ${last_name}].`;
+        //             await ctx.send(message, {
+        //                 peer_ids: ctx.allStuffIds,
+        //                 attachment: photos,
+        //                 keyboard: Keyboard.keyboard([
+        //                     Keyboard.textButton({
+        //                         label: "Принять",
+        //                         color: "positive",
+        //                         payload: {
+        //                             action: END_BATTLE_ACCEPT,
+        //                             id: end_battle.id
+        //                         }
+        //                     }),
+        //                     Keyboard.textButton({
+        //                         label: "Отказать",
+        //                         color: "negative",
+        //                         payload: {
+        //                             action: END_BATTLE_CANCEL,
+        //                             id: end_battle.id
+        //                         }
+        //                     })
+        //                 ]).inline(true)
+        //             });
+        //             ctx.scene.leave();
+        //             return ctx.send(`Заявка отправлена!`, {
+        //                 keyboard: MAIN_MENU_KEYBOARD
+        //             });
+        //         } catch (e) {
+        //             ctx.scene.leave();
+        //             return sendError(ctx, 'end-battle', e);
+        //         }
+        //     }
+        // ])
     ]
 }
