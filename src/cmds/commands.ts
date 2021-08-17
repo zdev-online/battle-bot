@@ -567,18 +567,26 @@ hm.hear(/^\/cc/i, async (ctx: MessageContext) => {
 
 hm.hear(/^\/report/i, async (ctx: MessageContext) => {
     try {
-        if(!ctx.text){ return; }
+        if (!ctx.text) { return; }
+        if (!ctx.user) {
+            return ctx.send(`Чтобы воспользоваться /report - зарегистрируйтесь в боте!`, {
+                keyboard: Keyboard.keyboard([
+                    Keyboard.urlButton({ label: "Зарегистрироваться", url: `https://vk.com/club${ctx.$groupId}`})
+                ])
+            });
+        }
+        if(!ctx.user.canReport){ return ctx.send(`Вам запрещено писать в репорт!`); }
         let text = ctx.text.replace('/report', '');
-        if(!text.length){ return ctx.send(`Текст обращения отсутствует!\nПример: /report Какой-то текст`); }
+        if (!text.length) { return ctx.send(`Текст обращения отсутствует!\nПример: /report Какой-то текст`); }
         let report = await Reports.create({ reportId: ctx.senderId });
         config.debug && console.log(`Report: ${JSON.stringify(report)}`);
         let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
-        await ctx.send(`Репорт от пользователя [id${ctx.senderId}|${first_name} ${last_name}]!\nЕго текст: ${text}`, { 
+        await ctx.send(`Репорт от пользователя [id${ctx.senderId}|${first_name} ${last_name}]!\nЕго текст: ${text}`, {
             user_ids: ctx.allStuffIds,
             keyboard: Keyboard.keyboard([
-                Keyboard.textButton({ 
-                    label: 'Ответить', 
-                    color: 'positive', 
+                Keyboard.textButton({
+                    label: 'Ответить',
+                    color: 'positive',
                     payload: {
                         action: REPORT_ANSWER,
                         id: report.id,
@@ -595,16 +603,16 @@ hm.hear(/^\/report/i, async (ctx: MessageContext) => {
 
 hm.hear(/\/glist/i, async (ctx) => {
     try {
-        if(!ctx.text){ return;}
+        if (!ctx.text) { return; }
         if (!hasRole(ctx, 'stuff')) { return ctx.send(`Недостаточно прав!`); }
-        
+
         let id: string = ctx.text.split(' ')[1];
-        
+
         let data = await resolveResource({ api: vk.api, resource: id });
-        if(data.type != 'user'){ return ctx.send(`Ссылка должна указывать на пользователя!`); }
+        if (data.type != 'user') { return ctx.send(`Ссылка должна указывать на пользователя!`); }
 
         let user = await Rights.findOne({ vkId: data.id });
-        if(!user){
+        if (!user) {
             user = await Rights.create({ vkId: data.id });
         }
 
@@ -612,11 +620,35 @@ hm.hear(/\/glist/i, async (ctx) => {
         await user.save();
 
         return ctx.send(`Теперь [id${data.id}|пользователь] ${user.canInviteGroups ? '' : 'не '}может приглашать группы в беседы, где есть надзиратель!`);
-    } catch(e){
-        if(e.message == 'Resource not found'){
+    } catch (e) {
+        if (e.message == 'Resource not found') {
             return ctx.send(`Пользователь с таким ID - не найден!`);
         }
         return sendError(ctx, '/glist', e);
+    }
+});
+
+hm.hear(/\/(call|вызов)/i, async (ctx) => {
+    try {
+        if (!ctx.text) { return; }
+        let chat = await Chats.findOne({ chatId: ctx.chatId });
+        if (!chat) { return; }
+        if (!chat.isBattle) { return ctx.send(`Беседа не является баттл-беседой.`); }
+        let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
+        let link = await vk.api.messages.getInviteLink({ peer_id: ctx.peerId });
+        if (!link.link) { return ctx.send(`Не удалось получить ссылку на беседу!`); }
+        let message: string = `[id${ctx.senderId}|${first_name} ${last_name}] вызвал администрацию в баттл-беседу.\n`;
+        message += `Ссылка на беседу (Либо нажмите кнопку): ${link.link}`;
+        await ctx.send(message, {
+            user_ids: ctx.allStuffIds,
+            keyboard: Keyboard.keyboard([
+                Keyboard.urlButton({ label: "Беседа", url: link.link })
+            ]),
+            dont_parse_links: true
+        });
+        return ctx.send(`Уведомление отправлено! (Администраторов: ${ctx.allStuffIds.length})`);
+    } catch (e) {
+        return sendError(ctx, '/call', e);
     }
 });
 
