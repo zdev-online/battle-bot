@@ -1,11 +1,11 @@
 import { MessageContext, resolveResource, createCollectIterator, getRandomId, Keyboard } from 'vk-io';
-import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers, Settings, Reports, Rights } from '../database/models';
+import { Fall, Members, Chats, Admins, Stuff, Whitelist, Battles, Users, PoolUsers, Settings, Reports, Rights, Banned } from '../database/models';
 import { vk, hm, ss } from '../index';
 import sendError from '../utils/sendError';
 import moment from 'moment';
 import os from 'os';
 import config from '../config/config';
-import { REPORT_ANSWER } from '../utils/key-actions';
+import { REPORT_ANSWER, BAN_REPORT } from '../utils/key-actions';
 
 moment.locale('ru');
 
@@ -592,6 +592,15 @@ hm.hear(/^\/report/i, async (ctx: MessageContext) => {
                         id: report.id,
                         peerId: ctx.peerId
                     }
+                }),
+                Keyboard.textButton({
+                    label: 'Запретить',
+                    color: 'positive',
+                    payload: {
+                        action: BAN_REPORT,
+                        id: report.id,
+                        peerId: ctx.peerId
+                    }
                 })
             ]).inline(true)
         });
@@ -649,6 +658,41 @@ hm.hear(/\/(call|вызов)/i, async (ctx) => {
         return ctx.send(`Уведомление отправлено! (Администраторов: ${ctx.allStuffIds.length})`);
     } catch (e) {
         return sendError(ctx, '/call', e);
+    }
+});
+
+hm.hear(/\/ban/i, async (ctx) => {
+    try {  
+        if(!ctx.text){ return; }
+        if (!hasRole(ctx, 'stuff')) { return ctx.send(`Недостаточно прав!`); }
+        let [userId, days, reason] = ctx.text.split(' ');
+        let user = await resolveResource({ api: vk.api, resource: userId });
+        if(user.type != 'user'){ return ctx.send(`Неверный ID | Ссылка пользователя`); }
+        if(!days || Number.isNaN(Number(days))){ return ctx.send(`Укажите срок бана в днях!`); }
+        if(!reason){ return ctx.send(`Укажите причину бана!`); }
+
+        let check_ban = await Banned.findOne({ vkId: user.id });
+        if(check_ban){ return ctx.send(`У пользователя уже есть бан!`); }
+
+        let ban = await Banned.create({ 
+            vkId: user.id,
+            banBy: ctx.senderId,
+            reason,
+            unbanTime: new Date(new Date().getTime() + 1000 * 60 * 60 * 60 * 24 * Number(days))
+        });
+        let [
+            { first_name, last_name },
+            { first_name: aFN, last_name: aLN }
+        ] = await vk.api.users.get({ user_ids: [user.id.toString(), ctx.senderId.toString()] });
+        await ctx.send(`Вы были забанены [id${ctx.senderId}|администратором] баттл площадки [id${ctx.senderId}${aFN}${aLN}] по причине: ${reason}`, {
+            user_ids: user.id
+        });
+        return ctx.send(`[id${user.id}|${first_name} ${last_name}] был забанен в баттл-системе по причине: ${reason}!`);
+    } catch(e){
+        if(e.message == 'Resource not found'){
+            return ctx.send(`Неверный ID | Ссылка пользователя`);
+        }
+        return sendError(ctx, '/ban', e);
     }
 });
 

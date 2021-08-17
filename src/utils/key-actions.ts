@@ -25,3 +25,4 @@ export const REPORT_ANSWER          = "REPORT_ANSWER";
 export const END_BATTLE             = "END_BATTLE";
 export const END_BATTLE_ACCEPT      = "END_BATTLE_ACCEPT";
 export const END_BATTLE_CANCEL      = "END_BATTLE_CANCEL";
+export const BAN_REPORT             = "BAN_REPORT";

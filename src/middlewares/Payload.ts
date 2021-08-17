@@ -7,7 +7,11 @@ import {
     ADMIN_ACCEPT_BATTLE,
     ADMIN_CALL,
     ADMIN_CANCEL_BATTLE,
-    CREATE_BATTLE, DEL_DELETED, END_BATTLE, END_BATTLE_ACCEPT, END_BATTLE_CANCEL, GET_BATTLES, KICK, PROFILE, REPORT_ANSWER
+    CREATE_BATTLE, DEL_DELETED, 
+    END_BATTLE, END_BATTLE_ACCEPT, 
+    END_BATTLE_CANCEL, GET_BATTLES, 
+    KICK, PROFILE, REPORT_ANSWER,
+    BAN_REPORT
 } from "../utils/key-actions";
 import sendError from "../utils/sendError";
 import { getBattleId, MAIN_MENU_KEYBOARD } from "../utils/utils";
@@ -110,32 +114,21 @@ export default (vk: VK, ss: Array<Number>) => {
                             }
                         });
                     }
+                    case BAN_REPORT: {
+                        let report = await Reports.findById(ctx.messagePayload.id);
+                        if(!report){
+                            return ctx.send(`Репорт - просрочен!`);
+                        }
+                        let user = await Users.findOne({ vkId: report.reportId });
+                        if(!user){ return; }
+                        user.canReport = false;
+                        await user.save();
+                        let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: user.vkId.toString() });
+                        return ctx.send(`Пользователь [id${user.vkId}|${first_name} ${last_name}] больше не может писать в репорт!`);
+                    }
                     case END_BATTLE: {
                         return ctx.scene.enter('end-battle');
                     }
-                    // case END_BATTLE_ACCEPT: {
-                    //     let end_battle = await EndBattle.findById(ctx.messagePayload.id);
-                    //     if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
-
-                    //     // createCustomPost(vk)();
-                    //     let [{ id: eId, first_name: eFN, last_name: eLN }] = await vk.api.users.get({ user_ids: end_battle.createdBy.toString() });
-                    //     await ctx.send(`Заявка на завершение баттла от пользователя [id${eId}|${eFN} ${eLN}] - одобрена!`);
-                        
-                    //     let [{ first_name, last_name }] = await vk.api.users.get({ user_ids: ctx.senderId.toString() });
-                    //     return ctx.send(`Заявка на завершение - одобрена администратором [id${ctx.senderId}|${first_name} ${last_name}]`, {
-                    //         user_ids: end_battle.createdBy
-                    //     });
-                    // } 
-                    // case END_BATTLE_CANCEL: {
-                    //     let end_battle = await EndBattle.findById(ctx.messagePayload.id);
-                    //     if(!end_battle){ return ctx.send(`Заявка - просрочена!`); } 
-                    //     await ctx.send('Заявка на заверешения баттла - не была одобрена!', {
-                    //         user_ids: end_battle.createdBy
-                    //     });
-                    //     let [{ id: eId, first_name: eFN, last_name: eLN }] = await vk.api.users.get({ user_ids: end_battle.createdBy.toString() });
-                    //     end_battle.delete();
-                    //     return await ctx.send(`Заявка на завершение баттла от пользователя [id${eId}|${eFN} ${eLN}] - не одобрена!`);
-                    // }
                 }
             }
             debug && console.log(`Payload-Go-Next`);

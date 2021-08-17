@@ -499,7 +499,7 @@ export default (vk: VK, ss: number[]) => {
 
                                 ctx.scene.leave();
                                 return await ctx.send(`${ctx.nickname}, вы подтвердили участие в баттле в качестве ${type ? 'атакующего' : 'защищающегося'}!`, {
-                                    keyboard: ctx.scene.state.keys
+                                    keyboard: MAIN_MENU_KEYBOARD
                                 });
                             }
                             case CANCEL_BATTLE: {
