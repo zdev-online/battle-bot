@@ -1,2 +1,3 @@
-:: javascript-obfuscator ./bundle/bot.js --output ./bundle/bot.e.js --config ./buildConfig.json
+@echo off
 tsc & webpack -c webpack.config.js
+@echo on
